@@ -38,88 +38,35 @@ export default function ReadmePreview({ customizationData, repoData }: ReadmePre
       markdown += `**Tags:** ${customizationData.basicInfo.tags.map((tag: string) => `\`${tag}\``).join(', ')}\n\n`;
     }
 
-    // Table of Contents
-    markdown += `## 📋 Table of Contents\n\n`;
-    if (customizationData.sections.installation.enabled) markdown += `- [Installation](#installation)\n`;
-    if (customizationData.sections.usage.enabled) markdown += `- [Usage](#usage)\n`;
-    if (customizationData.sections.features.enabled) markdown += `- [Features](#features)\n`;
-    if (customizationData.sections.development.enabled) markdown += `- [Development](#development)\n`;
-    if (customizationData.sections.contributing.enabled) markdown += `- [Contributing](#contributing)\n`;
-    if (customizationData.sections.license.enabled) markdown += `- [License](#license)\n`;
-    if (customizationData.sections.support.enabled) markdown += `- [Support](#support)\n`;
-    markdown += '\n';
+    // Get section order (use custom order if available, otherwise default)
+    const sectionOrder = customizationData.sectionOrder || [
+      'basic', 'installation', 'usage', 'features', 'development', 'contributing', 'license', 'support'
+    ];
 
-    // Installation Section
-    if (customizationData.sections.installation.enabled) {
-      markdown += `## ⚙️ Installation\n\n`;
-      if (customizationData.sections.installation.content) {
-        markdown += `${customizationData.sections.installation.content}\n\n`;
-      } else {
-        markdown += `\`\`\`bash\nnpm install ${repoData?.repoInfo?.name || 'package-name'}\n\`\`\`\n\n`;
-      }
+    // Table of Contents (only if enabled)
+    if (customizationData.styling?.showTableOfContents !== false) {
+      markdown += `## 📋 Table of Contents\n\n`;
+      sectionOrder.forEach(sectionId => {
+        if (sectionId === 'basic') return; // Skip basic info in TOC
+        const sectionData = getSectionData(sectionId);
+        if (sectionData && sectionData.enabled) {
+          const sectionName = getSectionName(sectionId);
+          markdown += `- [${sectionName}](#${sectionId.toLowerCase().replace(/\s+/g, '-')})\n`;
+        }
+      });
+      markdown += '\n';
     }
 
-    // Usage Section
-    if (customizationData.sections.usage.enabled) {
-      markdown += `## 🚀 Usage\n\n`;
-      if (customizationData.sections.usage.content) {
-        markdown += `${customizationData.sections.usage.content}\n\n`;
-      } else {
-        markdown += `\`\`\`javascript\nimport { something } from '${repoData?.repoInfo?.name || 'package-name'}';\n\`\`\`\n\n`;
+    // Generate sections in custom order
+    sectionOrder.forEach(sectionId => {
+      if (sectionId === 'basic') return; // Basic info is already handled above
+      const sectionMarkdown = generateSectionMarkdown(sectionId);
+      if (sectionMarkdown) {
+        markdown += sectionMarkdown;
       }
-    }
+    });
 
-    // Features Section
-    if (customizationData.sections.features.enabled) {
-      markdown += `## ✨ Features\n\n`;
-      if (customizationData.sections.features.content) {
-        markdown += `${customizationData.sections.features.content}\n\n`;
-      } else {
-        markdown += `- Feature 1\n- Feature 2\n- Feature 3\n\n`;
-      }
-    }
-
-    // Development Section
-    if (customizationData.sections.development.enabled) {
-      markdown += `## 🛠️ Development\n\n`;
-      if (customizationData.sections.development.content) {
-        markdown += `${customizationData.sections.development.content}\n\n`;
-      } else {
-        markdown += `\`\`\`bash\n# Clone the repository\ngit clone https://github.com/${repoData?.repoInfo?.name || 'username'}/${repoData?.repoInfo?.name || 'repo'}\n\n# Install dependencies\nnpm install\n\n# Run development server\nnpm run dev\n\`\`\`\n\n`;
-      }
-    }
-
-    // Contributing Section
-    if (customizationData.sections.contributing.enabled) {
-      markdown += `## 🤝 Contributing\n\n`;
-      if (customizationData.sections.contributing.content) {
-        markdown += `${customizationData.sections.contributing.content}\n\n`;
-      } else {
-        markdown += `Contributions are welcome! Please feel free to submit a Pull Request.\n\n`;
-      }
-    }
-
-    // License Section
-    if (customizationData.sections.license.enabled) {
-      markdown += `## 📄 License\n\n`;
-      if (customizationData.sections.license.content) {
-        markdown += `${customizationData.sections.license.content}\n\n`;
-      } else {
-        markdown += `This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.\n\n`;
-      }
-    }
-
-    // Support Section
-    if (customizationData.sections.support.enabled) {
-      markdown += `## 💬 Support\n\n`;
-      if (customizationData.sections.support.content) {
-        markdown += `${customizationData.sections.support.content}\n\n`;
-      } else {
-        markdown += `If you have any questions or need help, please open an issue on GitHub.\n\n`;
-      }
-    }
-
-    // Author Information
+    // Author Information (always at the end)
     if (customizationData.basicInfo.author.name) {
       markdown += `## 👨‍💻 Author\n\n`;
       markdown += `**${customizationData.basicInfo.author.name}**\n\n`;
@@ -136,6 +83,131 @@ export default function ReadmePreview({ customizationData, repoData }: ReadmePre
     }
 
     return markdown;
+  };
+
+  const getSectionData = (sectionId: string) => {
+    switch (sectionId) {
+      case 'installation':
+        return customizationData.sections.installation;
+      case 'usage':
+        return customizationData.sections.usage;
+      case 'features':
+        return customizationData.sections.features;
+      case 'development':
+        return customizationData.sections.development;
+      case 'contributing':
+        return customizationData.sections.contributing;
+      case 'license':
+        return customizationData.sections.license;
+      case 'support':
+        return customizationData.sections.support;
+      default:
+        return null;
+    }
+  };
+
+  const getSectionName = (sectionId: string) => {
+    const names: Record<string, string> = {
+      installation: 'Installation',
+      usage: 'Usage',
+      features: 'Features',
+      development: 'Development',
+      contributing: 'Contributing',
+      license: 'License',
+      support: 'Support'
+    };
+    return names[sectionId] || sectionId;
+  };
+
+  const generateSectionMarkdown = (sectionId: string) => {
+    const sectionData = getSectionData(sectionId);
+    if (!sectionData || !sectionData.enabled) return '';
+
+    let sectionMarkdown = '';
+
+    switch (sectionId) {
+      case 'installation':
+        sectionMarkdown += `## ⚙️ Installation\n\n`;
+        if (sectionData.content) {
+          sectionMarkdown += `${sectionData.content}\n\n`;
+        } else if (sectionData.installationMethods && sectionData.installationMethods.length > 0) {
+          sectionData.installationMethods.forEach((method: any) => {
+            sectionMarkdown += `**${method.manager}:**\n\`\`\`bash\n${method.command}\n\`\`\`\n\n`;
+          });
+        } else {
+          sectionMarkdown += `\`\`\`bash\nnpm install ${repoData?.repoInfo?.name || 'package-name'}\n\`\`\`\n\n`;
+        }
+        break;
+
+      case 'usage':
+        sectionMarkdown += `## 🚀 Usage\n\n`;
+        if (sectionData.content) {
+          sectionMarkdown += `${sectionData.content}\n\n`;
+        } else if (sectionData.examples && sectionData.examples.length > 0) {
+          sectionData.examples.forEach((example: any) => {
+            sectionMarkdown += `### ${example.title}\n\n`;
+            sectionMarkdown += `\`\`\`javascript\n${example.code}\n\`\`\`\n\n`;
+            if (example.description) {
+              sectionMarkdown += `${example.description}\n\n`;
+            }
+          });
+        } else {
+          sectionMarkdown += `\`\`\`javascript\nimport { something } from '${repoData?.repoInfo?.name || 'package-name'}';\n\`\`\`\n\n`;
+        }
+        break;
+
+      case 'features':
+        sectionMarkdown += `## ✨ Features\n\n`;
+        if (sectionData.content) {
+          sectionMarkdown += `${sectionData.content}\n\n`;
+        } else if (sectionData.features && sectionData.features.length > 0) {
+          sectionData.features.forEach((feature: any) => {
+            sectionMarkdown += `- ${feature.text}\n`;
+          });
+          sectionMarkdown += '\n';
+        } else {
+          sectionMarkdown += `- Feature 1\n- Feature 2\n- Feature 3\n\n`;
+        }
+        break;
+
+      case 'development':
+        sectionMarkdown += `## 🛠️ Development\n\n`;
+        if (sectionData.content) {
+          sectionMarkdown += `${sectionData.content}\n\n`;
+        } else {
+          sectionMarkdown += `\`\`\`bash\n# Clone the repository\ngit clone https://github.com/${repoData?.repoInfo?.name || 'username'}/${repoData?.repoInfo?.name || 'repo'}\n\n# Install dependencies\nnpm install\n\n# Run development server\nnpm run dev\n\`\`\`\n\n`;
+        }
+        break;
+
+      case 'contributing':
+        sectionMarkdown += `## 🤝 Contributing\n\n`;
+        if (sectionData.content) {
+          sectionMarkdown += `${sectionData.content}\n\n`;
+        } else {
+          sectionMarkdown += `Contributions are welcome! Please feel free to submit a Pull Request.\n\n`;
+        }
+        break;
+
+      case 'license':
+        sectionMarkdown += `## 📄 License\n\n`;
+        if (sectionData.content) {
+          sectionMarkdown += `${sectionData.content}\n\n`;
+        } else {
+          sectionMarkdown += `This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.\n\n`;
+        }
+        break;
+
+      case 'support':
+        sectionMarkdown += `## 💬 Support\n\n`;
+        if (sectionData.content) {
+          sectionMarkdown += `${sectionData.content}\n\n`;
+        } else {
+          sectionMarkdown += `If you have any questions or need help, please open an issue on GitHub.\n\n`;
+        }
+        break;
+    }
+
+    return sectionMarkdown;
   };
 
   const markdown = generateMarkdown();
