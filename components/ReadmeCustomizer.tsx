@@ -50,10 +50,25 @@ export default function ReadmeCustomizer({ customizationData, setCustomizationDa
   const sectionOrder = customizationData.sectionOrder || DEFAULT_SECTION_ORDER;
 
   const updateSection = (sectionId: string, data: any) => {
-    setCustomizationData((prev: any) => ({
-      ...prev,
-      [sectionId]: { ...prev[sectionId], ...data },
-    }));
+    setCustomizationData((prev: any) => {
+      // Handle nested section updates (like sections.installation)
+      if (sectionId.includes('.')) {
+        const [parent, child] = sectionId.split('.');
+        return {
+          ...prev,
+          [parent]: {
+            ...prev[parent],
+            [child]: { ...prev[parent]?.[child], ...data }
+          }
+        };
+      }
+      
+      // Handle direct section updates (like basicInfo)
+      return {
+        ...prev,
+        [sectionId]: { ...prev[sectionId], ...data },
+      };
+    });
   };
 
   const renderSection = (sectionId: string) => {

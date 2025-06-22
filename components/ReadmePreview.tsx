@@ -1,13 +1,18 @@
 'use client';
 
+import { useState, useMemo } from 'react';
 import { marked } from 'marked';
 
 interface ReadmePreviewProps {
   customizationData: any;
   repoData: any;
+  aiGeneratedContent?: string;
 }
 
-export default function ReadmePreview({ customizationData, repoData }: ReadmePreviewProps) {
+export default function ReadmePreview({ customizationData, repoData, aiGeneratedContent }: ReadmePreviewProps) {
+  const [viewMode, setViewMode] = useState<'custom' | 'ai'>('custom');
+  const [showRawMarkdown, setShowRawMarkdown] = useState(false);
+
   const generateMarkdown = () => {
     let markdown = '';
 
@@ -22,7 +27,7 @@ export default function ReadmePreview({ customizationData, repoData }: ReadmePre
     }
 
     // Badges
-    if (customizationData.basicInfo.badges.length > 0) {
+    if (customizationData.basicInfo.badges && customizationData.basicInfo.badges.length > 0) {
       markdown += customizationData.basicInfo.badges
         .map((badge: any) => `![${badge.alt || 'Badge'}](${badge.url})`)
         .join(' ') + '\n\n';
@@ -34,20 +39,19 @@ export default function ReadmePreview({ customizationData, repoData }: ReadmePre
     }
 
     // Tags
-    if (customizationData.basicInfo.tags.length > 0) {
+    if (customizationData.basicInfo.tags && customizationData.basicInfo.tags.length > 0) {
       markdown += `**Tags:** ${customizationData.basicInfo.tags.map((tag: string) => `\`${tag}\``).join(', ')}\n\n`;
     }
 
     // Get section order (use custom order if available, otherwise default)
     const sectionOrder = customizationData.sectionOrder || [
-      'basic', 'installation', 'usage', 'features', 'development', 'contributing', 'license', 'support'
+      'installation', 'usage', 'features', 'development', 'contributing', 'license', 'support'
     ];
 
     // Table of Contents (only if enabled)
     if (customizationData.styling?.showTableOfContents !== false) {
       markdown += `## 📋 Table of Contents\n\n`;
       sectionOrder.forEach(sectionId => {
-        if (sectionId === 'basic') return; // Skip basic info in TOC
         const sectionData = getSectionData(sectionId);
         if (sectionData && sectionData.enabled) {
           const sectionName = getSectionName(sectionId);
@@ -59,7 +63,6 @@ export default function ReadmePreview({ customizationData, repoData }: ReadmePre
 
     // Generate sections in custom order
     sectionOrder.forEach(sectionId => {
-      if (sectionId === 'basic') return; // Basic info is already handled above
       const sectionMarkdown = generateSectionMarkdown(sectionId);
       if (sectionMarkdown) {
         markdown += sectionMarkdown;
@@ -67,7 +70,7 @@ export default function ReadmePreview({ customizationData, repoData }: ReadmePre
     });
 
     // Author Information (always at the end)
-    if (customizationData.basicInfo.author.name) {
+    if (customizationData.basicInfo.author && customizationData.basicInfo.author.name) {
       markdown += `## 👨‍💻 Author\n\n`;
       markdown += `**${customizationData.basicInfo.author.name}**\n\n`;
       
@@ -86,6 +89,8 @@ export default function ReadmePreview({ customizationData, repoData }: ReadmePre
   };
 
   const getSectionData = (sectionId: string) => {
+    if (!customizationData.sections) return null;
+    
     switch (sectionId) {
       case 'installation':
         return customizationData.sections.installation;
@@ -128,80 +133,235 @@ export default function ReadmePreview({ customizationData, repoData }: ReadmePre
     switch (sectionId) {
       case 'installation':
         sectionMarkdown += `## ⚙️ Installation\n\n`;
-        if (sectionData.content) {
-          sectionMarkdown += `${sectionData.content}\n\n`;
-        } else if (sectionData.installationMethods && sectionData.installationMethods.length > 0) {
+        
+        // Prerequisites
+        if (sectionData.prerequisites) {
+          sectionMarkdown += `### Prerequisites\n\n${sectionData.prerequisites}\n\n`;
+        }
+        
+        // Installation Methods
+        if (sectionData.installationMethods && sectionData.installationMethods.length > 0) {
+          sectionMarkdown += `### Installation\n\n`;
           sectionData.installationMethods.forEach((method: any) => {
-            sectionMarkdown += `**${method.manager}:**\n\`\`\`bash\n${method.command}\n\`\`\`\n\n`;
+            sectionMarkdown += `**${method.manager}:**\n\`\`\`bash\n${method.command}\n\`\`\`\n`;
+            if (method.description) {
+              sectionMarkdown += `${method.description}\n\n`;
+            }
           });
+        } else if (sectionData.content) {
+          sectionMarkdown += `${sectionData.content}\n\n`;
         } else {
-          sectionMarkdown += `\`\`\`bash\nnpm install ${repoData?.repoInfo?.name || 'package-name'}\n\`\`\`\n\n`;
+          sectionMarkdown += `\`\`\`bash\nnpm install ${repoData?.name || 'package-name'}\n\`\`\`\n\n`;
+        }
+        
+        // Environment Setup
+        if (sectionData.environmentSetup) {
+          sectionMarkdown += `### Environment Setup\n\n${sectionData.environmentSetup}\n\n`;
+        }
+        
+        // Docker Setup
+        if (sectionData.dockerSetup) {
+          sectionMarkdown += `### Docker Setup\n\n${sectionData.dockerSetup}\n\n`;
+        }
+        
+        // Development Setup
+        if (sectionData.developmentSetup) {
+          sectionMarkdown += `### Development Setup\n\n${sectionData.developmentSetup}\n\n`;
         }
         break;
 
       case 'usage':
         sectionMarkdown += `## 🚀 Usage\n\n`;
-        if (sectionData.content) {
-          sectionMarkdown += `${sectionData.content}\n\n`;
-        } else if (sectionData.examples && sectionData.examples.length > 0) {
+        
+        // Basic Usage
+        if (sectionData.basicUsage) {
+          sectionMarkdown += `### Basic Usage\n\n${sectionData.basicUsage}\n\n`;
+        }
+        
+        // Code Examples
+        if (sectionData.examples && sectionData.examples.length > 0) {
+          sectionMarkdown += `### Examples\n\n`;
           sectionData.examples.forEach((example: any) => {
-            sectionMarkdown += `### ${example.title}\n\n`;
+            sectionMarkdown += `#### ${example.title}\n\n`;
             sectionMarkdown += `\`\`\`javascript\n${example.code}\n\`\`\`\n\n`;
             if (example.description) {
               sectionMarkdown += `${example.description}\n\n`;
             }
           });
-        } else {
-          sectionMarkdown += `\`\`\`javascript\nimport { something } from '${repoData?.repoInfo?.name || 'package-name'}';\n\`\`\`\n\n`;
+        }
+        
+        // Configuration Options
+        if (sectionData.configuration) {
+          sectionMarkdown += `### Configuration\n\n${sectionData.configuration}\n\n`;
+        }
+        
+        // API Documentation
+        if (sectionData.apiDocs) {
+          sectionMarkdown += `### API Reference\n\n${sectionData.apiDocs}\n\n`;
+        }
+        
+        // Custom Content
+        if (sectionData.content) {
+          sectionMarkdown += `${sectionData.content}\n\n`;
+        } else if (!sectionData.basicUsage && !sectionData.examples && !sectionData.configuration && !sectionData.apiDocs) {
+          sectionMarkdown += `\`\`\`javascript\nimport { something } from '${repoData?.name || 'package-name'}';\n\`\`\`\n\n`;
         }
         break;
 
       case 'features':
         sectionMarkdown += `## ✨ Features\n\n`;
-        if (sectionData.content) {
-          sectionMarkdown += `${sectionData.content}\n\n`;
-        } else if (sectionData.features && sectionData.features.length > 0) {
+        
+        // Feature List
+        if (sectionData.features && sectionData.features.length > 0) {
           sectionData.features.forEach((feature: any) => {
-            sectionMarkdown += `- ${feature.text}\n`;
+            sectionMarkdown += `- ${feature.text || feature}\n`;
           });
           sectionMarkdown += '\n';
-        } else {
+        }
+        
+        // Screenshots
+        if (sectionData.screenshots && sectionData.screenshots.length > 0) {
+          sectionMarkdown += `### Screenshots\n\n`;
+          sectionData.screenshots.forEach((screenshot: any) => {
+            sectionMarkdown += `![${screenshot.alt || 'Screenshot'}](${screenshot.url})\n`;
+            if (screenshot.description) {
+              sectionMarkdown += `*${screenshot.description}*\n\n`;
+            }
+          });
+        }
+        
+        // Demo Links
+        if (sectionData.demoLinks) {
+          sectionMarkdown += `### Demo\n\n${sectionData.demoLinks}\n\n`;
+        }
+        
+        // Performance Metrics
+        if (sectionData.performance) {
+          sectionMarkdown += `### Performance\n\n${sectionData.performance}\n\n`;
+        }
+        
+        // Custom Content
+        if (sectionData.content) {
+          sectionMarkdown += `${sectionData.content}\n\n`;
+        } else if (!sectionData.features && !sectionData.screenshots && !sectionData.demoLinks && !sectionData.performance) {
           sectionMarkdown += `- Feature 1\n- Feature 2\n- Feature 3\n\n`;
         }
         break;
 
       case 'development':
         sectionMarkdown += `## 🛠️ Development\n\n`;
+        
+        // Tech Stack
+        if (sectionData.techStack && sectionData.techStack.length > 0) {
+          sectionMarkdown += `### Tech Stack\n\n`;
+          sectionData.techStack.forEach((tech: any) => {
+            sectionMarkdown += `- ${tech.name}\n`;
+          });
+          sectionMarkdown += '\n';
+        }
+        
+        // Architecture
+        if (sectionData.architecture) {
+          sectionMarkdown += `### Architecture\n\n${sectionData.architecture}\n\n`;
+        }
+        
+        // Development Commands
+        if (sectionData.commands) {
+          sectionMarkdown += `### Development Commands\n\n\`\`\`bash\n${sectionData.commands}\n\`\`\`\n\n`;
+        }
+        
+        // Testing
+        if (sectionData.testing) {
+          sectionMarkdown += `### Testing\n\n${sectionData.testing}\n\n`;
+        }
+        
+        // Build Process
+        if (sectionData.buildProcess) {
+          sectionMarkdown += `### Build Process\n\n${sectionData.buildProcess}\n\n`;
+        }
+        
+        // Custom Content
         if (sectionData.content) {
           sectionMarkdown += `${sectionData.content}\n\n`;
-        } else {
-          sectionMarkdown += `\`\`\`bash\n# Clone the repository\ngit clone https://github.com/${repoData?.repoInfo?.name || 'username'}/${repoData?.repoInfo?.name || 'repo'}\n\n# Install dependencies\nnpm install\n\n# Run development server\nnpm run dev\n\`\`\`\n\n`;
+        } else if (!sectionData.techStack && !sectionData.architecture && !sectionData.commands && !sectionData.testing && !sectionData.buildProcess) {
+          sectionMarkdown += `\`\`\`bash\n# Clone the repository\ngit clone https://github.com/${repoData?.owner?.login || 'username'}/${repoData?.name || 'repo'}\n\n# Install dependencies\nnpm install\n\n# Run development server\nnpm run dev\n\`\`\`\n\n`;
         }
         break;
 
       case 'contributing':
         sectionMarkdown += `## 🤝 Contributing\n\n`;
+        
+        // Contributing Guidelines
+        if (sectionData.guidelines) {
+          sectionMarkdown += `### Guidelines\n\n${sectionData.guidelines}\n\n`;
+        }
+        
+        // Development Setup
+        if (sectionData.devSetup) {
+          sectionMarkdown += `### Development Setup\n\n${sectionData.devSetup}\n\n`;
+        }
+        
+        // Code Style
+        if (sectionData.codeStyle) {
+          sectionMarkdown += `### Code Style\n\n${sectionData.codeStyle}\n\n`;
+        }
+        
+        // Pull Request Process
+        if (sectionData.prProcess) {
+          sectionMarkdown += `### Pull Request Process\n\n${sectionData.prProcess}\n\n`;
+        }
+        
+        // Custom Content
         if (sectionData.content) {
           sectionMarkdown += `${sectionData.content}\n\n`;
-        } else {
+        } else if (!sectionData.guidelines && !sectionData.devSetup && !sectionData.codeStyle && !sectionData.prProcess) {
           sectionMarkdown += `Contributions are welcome! Please feel free to submit a Pull Request.\n\n`;
         }
         break;
 
       case 'license':
         sectionMarkdown += `## 📄 License\n\n`;
+        
+        // License Type
+        if (sectionData.licenseType) {
+          sectionMarkdown += `**License:** ${sectionData.licenseType}\n\n`;
+        }
+        
+        // License Text
+        if (sectionData.licenseText) {
+          sectionMarkdown += `${sectionData.licenseText}\n\n`;
+        }
+        
+        // Custom Content
         if (sectionData.content) {
           sectionMarkdown += `${sectionData.content}\n\n`;
-        } else {
+        } else if (!sectionData.licenseType && !sectionData.licenseText) {
           sectionMarkdown += `This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.\n\n`;
         }
         break;
 
       case 'support':
         sectionMarkdown += `## 💬 Support\n\n`;
+        
+        // Support Channels
+        if (sectionData.channels) {
+          sectionMarkdown += `### Support Channels\n\n${sectionData.channels}\n\n`;
+        }
+        
+        // FAQ
+        if (sectionData.faq) {
+          sectionMarkdown += `### FAQ\n\n${sectionData.faq}\n\n`;
+        }
+        
+        // Troubleshooting
+        if (sectionData.troubleshooting) {
+          sectionMarkdown += `### Troubleshooting\n\n${sectionData.troubleshooting}\n\n`;
+        }
+        
+        // Custom Content
         if (sectionData.content) {
           sectionMarkdown += `${sectionData.content}\n\n`;
-        } else {
+        } else if (!sectionData.channels && !sectionData.faq && !sectionData.troubleshooting) {
           sectionMarkdown += `If you have any questions or need help, please open an issue on GitHub.\n\n`;
         }
         break;
@@ -210,7 +370,13 @@ export default function ReadmePreview({ customizationData, repoData }: ReadmePre
     return sectionMarkdown;
   };
 
-  const markdown = generateMarkdown();
+  // Use useMemo to regenerate markdown when dependencies change
+  const markdown = useMemo(() => {
+    if (viewMode === 'ai' && aiGeneratedContent) {
+      return aiGeneratedContent;
+    }
+    return generateMarkdown();
+  }, [viewMode, aiGeneratedContent, customizationData, repoData]);
 
   return (
     <div className="h-full flex flex-col">
@@ -219,11 +385,39 @@ export default function ReadmePreview({ customizationData, repoData }: ReadmePre
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900">📖 README Preview</h2>
           <div className="flex items-center space-x-2">
-            <button className="px-3 py-1 text-sm text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50">
-              Raw Markdown
-            </button>
-            <button className="px-3 py-1 text-sm text-blue-600 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100">
-              Preview
+            {aiGeneratedContent && (
+              <div className="flex items-center space-x-1 mr-4">
+                <button
+                  onClick={() => setViewMode('custom')}
+                  className={`px-3 py-1 text-sm rounded transition-colors ${
+                    viewMode === 'custom'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  Custom
+                </button>
+                <button
+                  onClick={() => setViewMode('ai')}
+                  className={`px-3 py-1 text-sm rounded transition-colors ${
+                    viewMode === 'ai'
+                      ? 'bg-green-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  AI Generated
+                </button>
+              </div>
+            )}
+            <button 
+              onClick={() => setShowRawMarkdown(!showRawMarkdown)}
+              className={`px-3 py-1 text-sm border rounded transition-colors ${
+                showRawMarkdown 
+                  ? 'text-blue-600 bg-blue-50 border-blue-200' 
+                  : 'text-gray-600 bg-white border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              {showRawMarkdown ? 'Preview' : 'Raw Markdown'}
             </button>
           </div>
         </div>
@@ -232,17 +426,35 @@ export default function ReadmePreview({ customizationData, repoData }: ReadmePre
       {/* Preview Content */}
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-4xl mx-auto">
-          <div 
-            className="prose prose-lg max-w-none"
-            dangerouslySetInnerHTML={{ __html: marked(markdown) }}
-          />
+          {viewMode === 'ai' && aiGeneratedContent ? (
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-center text-green-800">
+                <span className="mr-2">🤖</span>
+                <span className="text-sm font-medium">AI Generated Content</span>
+              </div>
+            </div>
+          ) : null}
+          
+          {showRawMarkdown ? (
+            <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
+              {markdown}
+            </pre>
+          ) : (
+            <div 
+              className="prose prose-lg max-w-none"
+              dangerouslySetInnerHTML={{ __html: marked(markdown) }}
+            />
+          )}
         </div>
       </div>
 
       {/* Preview Footer */}
       <div className="bg-gray-50 border-t border-gray-200 px-6 py-3">
         <div className="flex items-center justify-between text-sm text-gray-600">
-          <span>Generated preview</span>
+          <span>
+            {viewMode === 'ai' ? 'AI Generated preview' : 'Custom preview'}
+            {showRawMarkdown && ' (Raw Markdown)'}
+          </span>
           <span>{markdown.length} characters</span>
         </div>
       </div>
