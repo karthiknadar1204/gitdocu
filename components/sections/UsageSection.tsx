@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import RichTextEditor from '../RichTextEditor';
 
 interface UsageSectionProps {
   data: any;
@@ -57,12 +58,11 @@ export default function UsageSection({ data, updateData, repoData }: UsageSectio
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Basic Usage
             </label>
-            <textarea
+            <RichTextEditor
               value={data.basicUsage || ''}
-              onChange={(e) => updateData({ basicUsage: e.target.value })}
-              rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onChange={(value) => updateData({ basicUsage: value })}
               placeholder="Simple example of how to use your project"
+              rows={4}
             />
           </div>
 
@@ -88,12 +88,11 @@ export default function UsageSection({ data, updateData, repoData }: UsageSectio
                 className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
                 placeholder="Code snippet..."
               />
-              <textarea
+              <RichTextEditor
                 value={newExample.description}
-                onChange={(e) => setNewExample({ ...newExample, description: e.target.value })}
-                rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onChange={(value) => setNewExample({ ...newExample, description: value })}
                 placeholder="Description of what this example does"
+                rows={2}
               />
               <button
                 onClick={addExample}
@@ -121,7 +120,16 @@ export default function UsageSection({ data, updateData, repoData }: UsageSectio
                       <code>{example.code}</code>
                     </pre>
                     {example.description && (
-                      <p className="text-sm text-gray-600">{example.description}</p>
+                      <div className="prose prose-sm max-w-none">
+                        <div dangerouslySetInnerHTML={{ 
+                          __html: example.description
+                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                            .replace(/`(.*?)`/g, '<code class="bg-gray-200 px-1 rounded">$1</code>')
+                            .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-blue-600 hover:underline">$1</a>')
+                            .replace(/\n/g, '<br>')
+                        }} />
+                      </div>
                     )}
                   </div>
                 ))}
@@ -134,12 +142,11 @@ export default function UsageSection({ data, updateData, repoData }: UsageSectio
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Configuration Options
             </label>
-            <textarea
+            <RichTextEditor
               value={data.configuration || ''}
-              onChange={(e) => updateData({ configuration: e.target.value })}
-              rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onChange={(value) => updateData({ configuration: value })}
               placeholder="Available configuration options and their descriptions"
+              rows={4}
             />
           </div>
 
@@ -148,12 +155,11 @@ export default function UsageSection({ data, updateData, repoData }: UsageSectio
             <label className="block text-sm font-medium text-gray-700 mb-2">
               API Documentation
             </label>
-            <textarea
+            <RichTextEditor
               value={data.apiDocs || ''}
-              onChange={(e) => updateData({ apiDocs: e.target.value })}
-              rows={6}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onChange={(value) => updateData({ apiDocs: value })}
               placeholder="API methods, parameters, and return values"
+              rows={6}
             />
           </div>
 
@@ -162,12 +168,11 @@ export default function UsageSection({ data, updateData, repoData }: UsageSectio
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Custom Usage Content
             </label>
-            <textarea
+            <RichTextEditor
               value={data.content || ''}
-              onChange={(e) => updateData({ content: e.target.value })}
-              rows={6}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onChange={(value) => updateData({ content: value })}
               placeholder="Add any additional usage instructions or custom content..."
+              rows={6}
             />
           </div>
         </>

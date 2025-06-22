@@ -1,5 +1,7 @@
 'use client';
 
+import RichTextEditor from '../RichTextEditor';
+
 interface LicenseSectionProps {
   data: any;
   updateData: (data: any) => void;
@@ -47,35 +49,38 @@ export default function LicenseSection({ data, updateData, repoData }: LicenseSe
             <label className="block text-sm font-medium text-gray-700 mb-2">
               License Type
             </label>
-            <div className="grid grid-cols-2 gap-2">
-              {licenses.map((license) => (
-                <button
-                  key={license.name}
-                  onClick={() => updateData({ licenseType: license.name })}
-                  className={`p-3 text-left border rounded-lg transition-colors ${
-                    data.licenseType === license.name
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="font-medium">{license.name}</div>
-                  <div className="text-sm text-gray-600">{license.description}</div>
-                </button>
-              ))}
-            </div>
+            <input
+              type="text"
+              value={data.licenseType || ''}
+              onChange={(e) => updateData({ licenseType: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="e.g., MIT License, Apache 2.0, GPL-3.0"
+            />
           </div>
 
-          {/* Custom License Content */}
+          {/* License Text */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              License Content
+              License Text
             </label>
-            <textarea
-              value={data.content || ''}
-              onChange={(e) => updateData({ content: e.target.value })}
+            <RichTextEditor
+              value={data.licenseText || ''}
+              onChange={(value) => updateData({ licenseText: value })}
+              placeholder="Full license text or reference to license file"
               rows={8}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="License text or reference to LICENSE file"
+            />
+          </div>
+
+          {/* Custom Content */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Custom License Content
+            </label>
+            <RichTextEditor
+              value={data.content || ''}
+              onChange={(value) => updateData({ content: value })}
+              placeholder="Add any additional license information..."
+              rows={6}
             />
           </div>
         </>

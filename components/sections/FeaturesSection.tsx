@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import RichTextEditor from '../RichTextEditor';
 
 interface FeaturesSectionProps {
   data: any;
@@ -133,12 +134,11 @@ export default function FeaturesSection({ data, updateData, repoData }: Features
                 className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Alt text"
               />
-              <textarea
+              <RichTextEditor
                 value={newScreenshot.description}
-                onChange={(e) => setNewScreenshot({ ...newScreenshot, description: e.target.value })}
-                rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onChange={(value) => setNewScreenshot({ ...newScreenshot, description: value })}
                 placeholder="Description"
+                rows={2}
               />
               <button
                 onClick={addScreenshot}
@@ -170,7 +170,16 @@ export default function FeaturesSection({ data, updateData, repoData }: Features
                         </button>
                       </div>
                       {screenshot.description && (
-                        <p className="text-xs text-gray-600">{screenshot.description}</p>
+                        <div className="prose prose-sm max-w-none">
+                          <div dangerouslySetInnerHTML={{ 
+                            __html: screenshot.description
+                              .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                              .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                              .replace(/`(.*?)`/g, '<code class="bg-gray-200 px-1 rounded">$1</code>')
+                              .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-blue-600 hover:underline">$1</a>')
+                              .replace(/\n/g, '<br>')
+                          }} />
+                        </div>
                       )}
                     </div>
                   </div>
@@ -184,12 +193,11 @@ export default function FeaturesSection({ data, updateData, repoData }: Features
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Demo Links
             </label>
-            <textarea
+            <RichTextEditor
               value={data.demoLinks || ''}
-              onChange={(e) => updateData({ demoLinks: e.target.value })}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onChange={(value) => updateData({ demoLinks: value })}
               placeholder="Live demo URLs, CodeSandbox links, etc."
+              rows={3}
             />
           </div>
 
@@ -198,12 +206,11 @@ export default function FeaturesSection({ data, updateData, repoData }: Features
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Performance & Benchmarks
             </label>
-            <textarea
+            <RichTextEditor
               value={data.performance || ''}
-              onChange={(e) => updateData({ performance: e.target.value })}
+              onChange={(value) => updateData({ performance: value })}
+              placeholder="Performance metrics, benchmarks, speed comparisons"
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Performance metrics, benchmarks, comparisons"
             />
           </div>
 
@@ -212,12 +219,11 @@ export default function FeaturesSection({ data, updateData, repoData }: Features
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Custom Features Content
             </label>
-            <textarea
+            <RichTextEditor
               value={data.content || ''}
-              onChange={(e) => updateData({ content: e.target.value })}
+              onChange={(value) => updateData({ content: value })}
+              placeholder="Add any additional features or custom content..."
               rows={6}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Add any additional feature descriptions or custom content..."
             />
           </div>
         </>

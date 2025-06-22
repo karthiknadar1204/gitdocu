@@ -1,5 +1,7 @@
 'use client';
 
+import RichTextEditor from '../RichTextEditor';
+
 interface SupportSectionProps {
   data: any;
   updateData: (data: any) => void;
@@ -11,7 +13,7 @@ export default function SupportSection({ data, updateData, repoData }: SupportSe
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold text-gray-900 mb-4">💬 Support</h2>
-        <p className="text-gray-600 mb-6">Information about getting help and support.</p>
+        <p className="text-gray-600 mb-6">How users can get help and support.</p>
       </div>
 
       {/* Enable/Disable Section */}
@@ -38,26 +40,37 @@ export default function SupportSection({ data, updateData, repoData }: SupportSe
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Support Channels
             </label>
-            <textarea
-              value={data.supportChannels || ''}
-              onChange={(e) => updateData({ supportChannels: e.target.value })}
+            <RichTextEditor
+              value={data.channels || ''}
+              onChange={(value) => updateData({ channels: value })}
+              placeholder="GitHub Issues, Discord, Email, etc."
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="GitHub Issues, Discord, Stack Overflow, etc."
             />
           </div>
 
           {/* FAQ */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Frequently Asked Questions
+              FAQ
             </label>
-            <textarea
+            <RichTextEditor
               value={data.faq || ''}
-              onChange={(e) => updateData({ faq: e.target.value })}
+              onChange={(value) => updateData({ faq: value })}
+              placeholder="Frequently asked questions and answers"
               rows={6}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Common questions and answers"
+            />
+          </div>
+
+          {/* Troubleshooting */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Troubleshooting
+            </label>
+            <RichTextEditor
+              value={data.troubleshooting || ''}
+              onChange={(value) => updateData({ troubleshooting: value })}
+              placeholder="Common issues and their solutions"
+              rows={6}
             />
           </div>
 
@@ -66,12 +79,11 @@ export default function SupportSection({ data, updateData, repoData }: SupportSe
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Custom Support Content
             </label>
-            <textarea
+            <RichTextEditor
               value={data.content || ''}
-              onChange={(e) => updateData({ content: e.target.value })}
-              rows={6}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onChange={(value) => updateData({ content: value })}
               placeholder="Add any additional support information..."
+              rows={6}
             />
           </div>
         </>

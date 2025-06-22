@@ -1,5 +1,7 @@
 'use client';
 
+import RichTextEditor from '../RichTextEditor';
+
 interface ContributingSectionProps {
   data: any;
   updateData: (data: any) => void;
@@ -18,7 +20,7 @@ export default function ContributingSection({ data, updateData, repoData }: Cont
       <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
         <div>
           <h3 className="font-medium text-gray-900">Contributing Section</h3>
-          <p className="text-sm text-gray-600">Show contribution guidelines in the README</p>
+          <p className="text-sm text-gray-600">Show contributing guidelines in the README</p>
         </div>
         <label className="relative inline-flex items-center cursor-pointer">
           <input
@@ -33,31 +35,42 @@ export default function ContributingSection({ data, updateData, repoData }: Cont
 
       {data.enabled && (
         <>
-          {/* How to Contribute */}
+          {/* Contributing Guidelines */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              How to Contribute
+              Contributing Guidelines
             </label>
-            <textarea
-              value={data.howToContribute || ''}
-              onChange={(e) => updateData({ howToContribute: e.target.value })}
-              rows={6}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Step-by-step guide for contributors"
+            <RichTextEditor
+              value={data.guidelines || ''}
+              onChange={(value) => updateData({ guidelines: value })}
+              placeholder="General guidelines for contributors"
+              rows={4}
+            />
+          </div>
+
+          {/* Development Setup */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Development Setup
+            </label>
+            <RichTextEditor
+              value={data.devSetup || ''}
+              onChange={(value) => updateData({ devSetup: value })}
+              placeholder="How to set up the development environment"
+              rows={4}
             />
           </div>
 
           {/* Code Style */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Code Style Guidelines
+              Code Style
             </label>
-            <textarea
+            <RichTextEditor
               value={data.codeStyle || ''}
-              onChange={(e) => updateData({ codeStyle: e.target.value })}
+              onChange={(value) => updateData({ codeStyle: value })}
+              placeholder="Coding standards, formatting rules, etc."
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Coding standards, formatting rules, linting"
             />
           </div>
 
@@ -66,12 +79,11 @@ export default function ContributingSection({ data, updateData, repoData }: Cont
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Pull Request Process
             </label>
-            <textarea
+            <RichTextEditor
               value={data.prProcess || ''}
-              onChange={(e) => updateData({ prProcess: e.target.value })}
+              onChange={(value) => updateData({ prProcess: value })}
+              placeholder="How to submit pull requests, review process, etc."
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="PR guidelines, review process, merge criteria"
             />
           </div>
 
@@ -80,12 +92,11 @@ export default function ContributingSection({ data, updateData, repoData }: Cont
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Custom Contributing Content
             </label>
-            <textarea
+            <RichTextEditor
               value={data.content || ''}
-              onChange={(e) => updateData({ content: e.target.value })}
+              onChange={(value) => updateData({ content: value })}
+              placeholder="Add any additional contributing information..."
               rows={6}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Add any additional contribution guidelines..."
             />
           </div>
         </>

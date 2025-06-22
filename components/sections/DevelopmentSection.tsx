@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import RichTextEditor from '../RichTextEditor';
 
 interface DevelopmentSectionProps {
   data: any;
@@ -102,12 +103,11 @@ export default function DevelopmentSection({ data, updateData, repoData }: Devel
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Architecture Overview
             </label>
-            <textarea
+            <RichTextEditor
               value={data.architecture || ''}
-              onChange={(e) => updateData({ architecture: e.target.value })}
-              rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onChange={(value) => updateData({ architecture: value })}
               placeholder="Describe the project architecture, design patterns, etc."
+              rows={4}
             />
           </div>
 
@@ -116,11 +116,9 @@ export default function DevelopmentSection({ data, updateData, repoData }: Devel
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Development Commands
             </label>
-            <textarea
+            <RichTextEditor
               value={data.commands || ''}
-              onChange={(e) => updateData({ commands: e.target.value })}
-              rows={6}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+              onChange={(value) => updateData({ commands: value })}
               placeholder={`# Install dependencies
 npm install
 
@@ -132,6 +130,7 @@ npm run build
 
 # Run tests
 npm test`}
+              rows={6}
             />
           </div>
 
@@ -140,12 +139,11 @@ npm test`}
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Testing
             </label>
-            <textarea
+            <RichTextEditor
               value={data.testing || ''}
-              onChange={(e) => updateData({ testing: e.target.value })}
-              rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onChange={(value) => updateData({ testing: value })}
               placeholder="Testing framework, coverage, how to run tests"
+              rows={4}
             />
           </div>
 
@@ -154,12 +152,11 @@ npm test`}
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Build Process
             </label>
-            <textarea
+            <RichTextEditor
               value={data.buildProcess || ''}
-              onChange={(e) => updateData({ buildProcess: e.target.value })}
-              rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onChange={(value) => updateData({ buildProcess: value })}
               placeholder="CI/CD pipeline, deployment process, build steps"
+              rows={4}
             />
           </div>
 
@@ -168,12 +165,11 @@ npm test`}
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Custom Development Content
             </label>
-            <textarea
+            <RichTextEditor
               value={data.content || ''}
-              onChange={(e) => updateData({ content: e.target.value })}
-              rows={6}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onChange={(value) => updateData({ content: value })}
               placeholder="Add any additional development information..."
+              rows={6}
             />
           </div>
         </>

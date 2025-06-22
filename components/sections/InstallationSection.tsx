@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import RichTextEditor from '../RichTextEditor';
 
 interface InstallationSectionProps {
   data: any;
@@ -80,12 +81,11 @@ export default function InstallationSection({ data, updateData, repoData }: Inst
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Prerequisites
             </label>
-            <textarea
+            <RichTextEditor
               value={data.prerequisites || ''}
-              onChange={(e) => updateData({ prerequisites: e.target.value })}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onChange={(value) => updateData({ prerequisites: value })}
               placeholder="List any prerequisites (e.g., Node.js 16+, Python 3.8+)"
+              rows={3}
             />
           </div>
 
@@ -133,12 +133,12 @@ export default function InstallationSection({ data, updateData, repoData }: Inst
                       className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                       placeholder="Installation command"
                     />
-                    <input
-                      type="text"
+                    <RichTextEditor
                       value={method.description}
-                      onChange={(e) => updateInstallationMethod(method.id, 'description', e.target.value)}
-                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded mt-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      onChange={(value) => updateInstallationMethod(method.id, 'description', value)}
                       placeholder="Description"
+                      rows={2}
+                      className="mt-1"
                     />
                   </div>
                 ))}
@@ -151,12 +151,11 @@ export default function InstallationSection({ data, updateData, repoData }: Inst
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Environment Setup
             </label>
-            <textarea
+            <RichTextEditor
               value={data.environmentSetup || ''}
-              onChange={(e) => updateData({ environmentSetup: e.target.value })}
-              rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onChange={(value) => updateData({ environmentSetup: value })}
               placeholder="Environment variables, configuration files, etc."
+              rows={4}
             />
           </div>
 
@@ -177,12 +176,11 @@ export default function InstallationSection({ data, updateData, repoData }: Inst
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Docker Setup
                   </label>
-                  <textarea
+                  <RichTextEditor
                     value={data.dockerSetup || ''}
-                    onChange={(e) => updateData({ dockerSetup: e.target.value })}
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    onChange={(value) => updateData({ dockerSetup: value })}
                     placeholder="Docker commands and setup instructions"
+                    rows={3}
                   />
                 </div>
 
@@ -191,12 +189,11 @@ export default function InstallationSection({ data, updateData, repoData }: Inst
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Development Setup
                   </label>
-                  <textarea
+                  <RichTextEditor
                     value={data.developmentSetup || ''}
-                    onChange={(e) => updateData({ developmentSetup: e.target.value })}
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    onChange={(value) => updateData({ developmentSetup: value })}
                     placeholder="Local development setup instructions"
+                    rows={3}
                   />
                 </div>
 
@@ -205,12 +202,11 @@ export default function InstallationSection({ data, updateData, repoData }: Inst
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Troubleshooting
                   </label>
-                  <textarea
+                  <RichTextEditor
                     value={data.troubleshooting || ''}
-                    onChange={(e) => updateData({ troubleshooting: e.target.value })}
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    onChange={(value) => updateData({ troubleshooting: value })}
                     placeholder="Common installation issues and solutions"
+                    rows={3}
                   />
                 </div>
               </div>
@@ -222,12 +218,11 @@ export default function InstallationSection({ data, updateData, repoData }: Inst
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Custom Installation Content
             </label>
-            <textarea
+            <RichTextEditor
               value={data.content || ''}
-              onChange={(e) => updateData({ content: e.target.value })}
-              rows={6}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onChange={(value) => updateData({ content: value })}
               placeholder="Add any additional installation instructions or custom content..."
+              rows={6}
             />
             <p className="text-xs text-gray-500 mt-1">
               This content will be displayed at the end of the installation section.
