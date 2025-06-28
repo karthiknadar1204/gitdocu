@@ -3,7 +3,7 @@
 import { useState, useEffect, use } from 'react';
 import { analyzeRepository, generateREADME } from '@/lib/ai';
 import { githubAPI } from '@/lib/github';
-import ReadmePreview from '@/components/ReadmePreview';
+import ReadmeEditor from '@/components/ReadmeEditor';
 
 interface Props {
   params: { username: string; repo: string };
@@ -17,6 +17,7 @@ export default function RepoPage({ params }: Props) {
   const [aiProcessing, setAiProcessing] = useState(false);
   const [aiGeneratedContent, setAiGeneratedContent] = useState<string>('');
   const [fetchProgress, setFetchProgress] = useState<string>('');
+  const [editedContent, setEditedContent] = useState<string>('');
 
   useEffect(() => {
     const fetchDataAndGenerate = async () => {
@@ -92,6 +93,7 @@ export default function RepoPage({ params }: Props) {
           );
 
           setAiGeneratedContent(generatedREADME);
+          setEditedContent(generatedREADME); // Initialize edited content with AI generated content
           setFetchProgress('README generated successfully!');
         } catch (error) {
           console.error('AI generation failed:', error);
@@ -123,13 +125,13 @@ export default function RepoPage({ params }: Props) {
 
   const handleExportMarkdown = async () => {
     try {
-      await navigator.clipboard.writeText(aiGeneratedContent);
+      await navigator.clipboard.writeText(editedContent || aiGeneratedContent);
       alert('Markdown copied to clipboard!');
     } catch (err) {
       console.error('Failed to copy markdown:', err);
       // Fallback for older browsers
       const textArea = document.createElement('textarea');
-      textArea.value = aiGeneratedContent;
+      textArea.value = editedContent || aiGeneratedContent;
       document.body.appendChild(textArea);
       textArea.select();
       document.execCommand('copy');
@@ -187,12 +189,12 @@ export default function RepoPage({ params }: Props) {
         </div>
       </header>
 
-      {/* Main Content - Full Width Preview */}
-      <div className="max-w-4xl mx-auto p-6">
-        <ReadmePreview 
-          customizationData={{}}
+      {/* Main Content - Full Width Editor */}
+      <div className="h-[calc(100vh-80px)]">
+        <ReadmeEditor 
+          initialContent={aiGeneratedContent}
+          onContentChange={setEditedContent}
           repoData={repoData}
-          aiGeneratedContent={aiGeneratedContent}
         />
       </div>
     </div>
