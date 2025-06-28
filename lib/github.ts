@@ -99,54 +99,168 @@ function isImportantFile(path: string): boolean {
 // Add delay between API calls to respect rate limits
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-async function fetchGitHubAPI(endpoint: string, retries = 3): Promise<any> {
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    try {
-      const response = await fetch(`https://api.github.com${endpoint}`, {
-        headers: {
-          'Accept': 'application/vnd.github.v3+json',
-          'User-Agent': 'GitDoc-App'
-        }
-      });
+// GitHub API utility with rate limiting and error handling
+class GitHubAPI {
+  private static instance: GitHubAPI;
+  private requestCount = 0;
+  private lastRequestTime = 0;
+  private rateLimitReset = 0;
 
-      if (response.status === 403) {
-        // Rate limited - wait longer and retry
-        const retryAfter = response.headers.get('Retry-After');
-        const waitTime = retryAfter ? parseInt(retryAfter) * 1000 : 60000; // Default 1 minute
-        console.log(`Rate limited. Waiting ${waitTime/1000} seconds before retry ${attempt}/${retries}`);
-        await delay(waitTime);
-        continue;
+  static getInstance(): GitHubAPI {
+    if (!GitHubAPI.instance) {
+      GitHubAPI.instance = new GitHubAPI();
+    }
+    return GitHubAPI.instance;
+  }
+
+  private async makeRequest(url: string, options: RequestInit = {}): Promise<Response> {
+    // Rate limiting: max 60 requests per hour for unauthenticated requests
+    const now = Date.now();
+    const timeSinceLastRequest = now - this.lastRequestTime;
+    
+    // Ensure at least 1 second between requests
+    if (timeSinceLastRequest < 1000) {
+      await new Promise(resolve => setTimeout(resolve, 1000 - timeSinceLastRequest));
+    }
+
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+        'User-Agent': 'GitDoc-App/1.0 (https://github.com/your-repo)',
+        'X-GitHub-Api-Version': '2022-11-28',
+        ...options.headers,
+      },
+    });
+
+    this.lastRequestTime = Date.now();
+    this.requestCount++;
+
+    // Check rate limit headers
+    const remaining = response.headers.get('X-RateLimit-Remaining');
+    const reset = response.headers.get('X-RateLimit-Reset');
+    
+    if (remaining === '0' && reset) {
+      this.rateLimitReset = parseInt(reset) * 1000;
+      const waitTime = this.rateLimitReset - Date.now();
+      if (waitTime > 0) {
+        throw new Error(`Rate limit exceeded. Please try again in ${Math.ceil(waitTime / 60000)} minutes.`);
       }
+    }
 
-      if (!response.ok) {
+    return response;
+  }
+
+  async getRepository(username: string, repo: string): Promise<any> {
+    const url = `https://api.github.com/repos/${username}/${repo}`;
+    const response = await this.makeRequest(url);
+    
+    if (!response.ok) {
+      if (response.status === 403) {
+        throw new Error('GitHub API rate limit exceeded. Please try again in a few minutes.');
+      } else if (response.status === 404) {
+        throw new Error('Repository not found. Please check the username and repository name.');
+      } else {
         throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
       }
-
-      return response.json();
-    } catch (error) {
-      if (attempt === retries) {
-        throw error;
-      }
-      console.log(`API call failed, attempt ${attempt}/${retries}. Retrying in 2 seconds...`);
-      await delay(2000);
     }
-  }
-}
-
-async function fetchFileContent(username: string, repo: string, path: string): Promise<string> {
-  try {
-    const fileData = await fetchGitHubAPI(`/repos/${username}/${repo}/contents/${path}`);
     
+    return response.json();
+  }
+
+  async getRepositoryTree(username: string, repo: string, branch: string = 'main'): Promise<any> {
+    const url = `https://api.github.com/repos/${username}/${repo}/git/trees/${branch}?recursive=1`;
+    const response = await this.makeRequest(url);
+    
+    if (!response.ok) {
+      if (response.status === 403) {
+        throw new Error('GitHub API rate limit exceeded. Please try again in a few minutes.');
+      } else if (response.status === 404) {
+        // Try alternative branches
+        const alternativeBranches = ['master', 'develop', 'dev'];
+        for (const altBranch of alternativeBranches) {
+          try {
+            const altUrl = `https://api.github.com/repos/${username}/${repo}/git/trees/${altBranch}?recursive=1`;
+            const altResponse = await this.makeRequest(altUrl);
+            if (altResponse.ok) {
+              return altResponse.json();
+            }
+          } catch (error) {
+            console.warn(`Failed to fetch ${altBranch} branch:`, error);
+          }
+        }
+        throw new Error('Could not access repository tree. Repository might be private or not found.');
+      } else {
+        throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+      }
+    }
+    
+    return response.json();
+  }
+
+  async getFileContent(username: string, repo: string, path: string): Promise<string | null> {
+    const url = `https://api.github.com/repos/${username}/${repo}/contents/${path}`;
+    const response = await this.makeRequest(url);
+    
+    if (!response.ok) {
+      if (response.status === 403) {
+        throw new Error('Rate limit exceeded');
+      } else if (response.status === 404) {
+        return null; // File not found
+      } else {
+        console.warn(`Failed to fetch ${path}: ${response.status}`);
+        return null;
+      }
+    }
+    
+    const fileData = await response.json();
     if (fileData.content && fileData.encoding === 'base64') {
       return Buffer.from(fileData.content, 'base64').toString('utf-8');
     }
     
-    return fileData.content || '';
-  } catch (error) {
-    console.warn(`Failed to fetch content for ${path}:`, error);
-    return '';
+    return null;
+  }
+
+  async getMultipleFiles(username: string, repo: string, paths: string[]): Promise<{ [key: string]: string }> {
+    const files: { [key: string]: string } = {};
+    let rateLimitHit = false;
+
+    for (const path of paths) {
+      if (rateLimitHit) break;
+      
+      try {
+        const content = await this.getFileContent(username, repo, path);
+        if (content) {
+          files[path] = content;
+          console.log(`✅ Fetched: ${path} (${content.length} chars)`);
+        }
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('Rate limit')) {
+          console.warn('Rate limit hit, stopping file fetch');
+          rateLimitHit = true;
+          break;
+        }
+        console.warn(`Failed to fetch ${path}:`, error);
+      }
+
+      // Add delay between requests
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
+    return files;
+  }
+
+  getRemainingRequests(): number {
+    return Math.max(0, 60 - this.requestCount);
+  }
+
+  getTimeUntilReset(): number {
+    if (this.rateLimitReset === 0) return 0;
+    return Math.max(0, this.rateLimitReset - Date.now());
   }
 }
+
+export const githubAPI = GitHubAPI.getInstance();
 
 export async function getRepoData(username: string, repo: string): Promise<RepoData> {
   console.log(`🔍 Fetching data for ${username}/${repo}`);
@@ -154,11 +268,11 @@ export async function getRepoData(username: string, repo: string): Promise<RepoD
   try {
     // Step 1: Get repo info
     console.log('📡 Fetching repo info...');
-    const repoInfo = await fetchGitHubAPI(`/repos/${username}/${repo}`);
+    const repoInfo = await githubAPI.getRepository(username, repo);
     
     // Step 2: Get file tree
     console.log('📡 Fetching file tree...');
-    const treeData = await fetchGitHubAPI(`/repos/${username}/${repo}/git/trees/main?recursive=1`);
+    const treeData = await githubAPI.getRepositoryTree(username, repo);
     
     if (!treeData.tree) {
       throw new Error('No files found in repository');
@@ -189,7 +303,7 @@ export async function getRepoData(username: string, repo: string): Promise<RepoD
       const filePath = importantFilePaths[i];
       console.log(`📄 Fetching ${i + 1}/${importantFilePaths.length}: ${filePath}`);
       
-      const content = await fetchFileContent(username, repo, filePath);
+      const content = await githubAPI.getFileContent(username, repo, filePath);
       if (content) {
         importantFiles[filePath] = content;
         console.log(`✅ Fetched: ${filePath} (${content.length} chars)`);

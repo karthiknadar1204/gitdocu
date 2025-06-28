@@ -10,6 +10,8 @@ interface FileAnalysis {
     content: string;
     type: 'config' | 'source' | 'documentation' | 'build' | 'other';
     importance: number;
+    size: number;
+    chunks?: string[];
 }
 
 interface AIAnalysisResult {
@@ -26,6 +28,276 @@ interface AIAnalysisResult {
     developmentSetup: string;
 }
 
+// Cache for file analyses to avoid re-processing
+const analysisCache = new Map<string, any>();
+
+// Adaptive processing based on codebase size
+function getProcessingStrategy(fileCount: number, totalSize: number): {
+    maxFiles: number;
+    maxChunkSize: number;
+    maxConcurrent: number;
+    useChunking: boolean;
+} {
+    if (fileCount > 1000 || totalSize > 10000000) {
+        // Very large codebase
+        return {
+            maxFiles: 15,
+            maxChunkSize: 2000,
+            maxConcurrent: 3,
+            useChunking: true
+        };
+    } else if (fileCount > 500 || totalSize > 5000000) {
+        // Large codebase
+        return {
+            maxFiles: 25,
+            maxChunkSize: 2500,
+            maxConcurrent: 4,
+            useChunking: true
+        };
+    } else if (fileCount > 100 || totalSize > 1000000) {
+        // Medium codebase
+        return {
+            maxFiles: 30,
+            maxChunkSize: 3000,
+            maxConcurrent: 5,
+            useChunking: false
+        };
+    } else {
+        // Small codebase
+        return {
+            maxFiles: 40,
+            maxChunkSize: 4000,
+            maxConcurrent: 6,
+            useChunking: false
+        };
+    }
+}
+
+// Smart file prioritization for large codebases
+function prioritizeFiles(fileTree: any[], importantFiles: { [key: string]: string }): FileAnalysis[] {
+    const priorityPatterns = {
+        config: ['package.json', 'requirements.txt', 'Cargo.toml', 'go.mod', 'pom.xml', 'build.gradle', 'Gemfile', 'composer.json', 'pyproject.toml'],
+        entry: ['main.js', 'main.ts', 'main.py', 'main.go', 'index.js', 'index.ts', 'app.js', 'app.ts', 'app.py', 'lib/main.dart'],
+        docs: ['README.md', 'readme.md', 'docs/', 'documentation/'],
+        build: ['Dockerfile', 'docker-compose.yml', 'Makefile', 'CMakeLists.txt', 'build.sh'],
+        source: ['src/', 'lib/', 'app/', 'components/', 'pages/']
+    };
+
+    const files: FileAnalysis[] = [];
+    let totalSize = 0;
+    
+    for (const [path, content] of Object.entries(importantFiles)) {
+        let importance = 1;
+        let type: 'config' | 'source' | 'documentation' | 'build' | 'other' = 'other';
+        
+        // Boost importance based on file type and location
+        if (priorityPatterns.config.some(pattern => path.includes(pattern))) {
+            importance = 10;
+            type = 'config';
+        } else if (priorityPatterns.entry.some(pattern => path.includes(pattern))) {
+            importance = 9;
+            type = 'source';
+        } else if (priorityPatterns.docs.some(pattern => path.includes(pattern))) {
+            importance = 8;
+            type = 'documentation';
+        } else if (priorityPatterns.build.some(pattern => path.includes(pattern))) {
+            importance = 7;
+            type = 'build';
+        } else if (priorityPatterns.source.some(pattern => path.includes(pattern))) {
+            importance = 6;
+            type = 'source';
+        }
+        
+        // Boost importance for root-level files
+        if (!path.includes('/')) {
+            importance += 2;
+        }
+        
+        // Reduce importance for test files
+        if (path.includes('test') || path.includes('spec') || path.includes('__tests__')) {
+            importance -= 3;
+        }
+        
+        // Reduce importance for generated files
+        if (path.includes('node_modules') || path.includes('dist') || path.includes('build')) {
+            importance -= 5;
+        }
+
+        totalSize += content.length;
+        files.push({
+            path,
+            content,
+            type,
+            importance: Math.max(1, importance),
+            size: content.length
+        });
+    }
+
+    // Get adaptive processing strategy
+    const strategy = getProcessingStrategy(files.length, totalSize);
+    console.log(`📊 Processing strategy: ${JSON.stringify(strategy)}`);
+
+    // Sort by importance and limit to top files
+    return files
+        .sort((a, b) => b.importance - a.importance)
+        .slice(0, strategy.maxFiles);
+}
+
+// Smart content chunking for large files
+function chunkContent(content: string, maxChunkSize: number = 3000): string[] {
+    if (content.length <= maxChunkSize) {
+        return [content];
+    }
+
+    const chunks: string[] = [];
+    let currentChunk = '';
+    const lines = content.split('\n');
+
+    for (const line of lines) {
+        if ((currentChunk + line).length > maxChunkSize && currentChunk) {
+            chunks.push(currentChunk.trim());
+            currentChunk = line + '\n';
+        } else {
+            currentChunk += line + '\n';
+        }
+    }
+
+    if (currentChunk.trim()) {
+        chunks.push(currentChunk.trim());
+    }
+
+    return chunks;
+}
+
+// Parallel file analysis with chunking and caching
+export async function analyzeFilesParallel(files: FileAnalysis[]): Promise<any[]> {
+    const strategy = getProcessingStrategy(files.length, files.reduce((sum, f) => sum + f.size, 0));
+    const results: any[] = [];
+    
+    // Process files in batches
+    for (let i = 0; i < files.length; i += strategy.maxConcurrent) {
+        const batch = files.slice(i, i + strategy.maxConcurrent);
+        const batchPromises = batch.map(file => analyzeFileWithCaching(file, strategy));
+        
+        const batchResults = await Promise.all(batchPromises);
+        results.push(...batchResults.filter(Boolean));
+        
+        // Add delay between batches to avoid rate limits
+        if (i + strategy.maxConcurrent < files.length) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+    }
+    
+    return results;
+}
+
+// Analyze file with caching and adaptive chunking
+async function analyzeFileWithCaching(file: FileAnalysis, strategy: any): Promise<any> {
+    // Check cache first
+    const cacheKey = `${file.path}-${file.content.length}`;
+    if (analysisCache.has(cacheKey)) {
+        console.log(`📋 Using cached analysis for ${file.path}`);
+        return analysisCache.get(cacheKey);
+    }
+
+    let result;
+    if (strategy.useChunking && file.content.length > strategy.maxChunkSize) {
+        result = await analyzeFileWithChunking(file, strategy.maxChunkSize);
+    } else {
+        result = await analyzeFile(file);
+    }
+
+    // Cache the result
+    if (result) {
+        analysisCache.set(cacheKey, result);
+    }
+
+    return result;
+}
+
+// Analyze file with smart chunking
+async function analyzeFileWithChunking(file: FileAnalysis, maxChunkSize: number): Promise<any> {
+    const chunks = chunkContent(file.content, maxChunkSize);
+    file.chunks = chunks;
+    
+    if (chunks.length === 1) {
+        return analyzeFile(file);
+    }
+    
+    // For large files, analyze each chunk and combine results
+    const chunkAnalyses = await Promise.all(
+        chunks.map((chunk, index) => analyzeFileChunk(file.path, chunk, index, chunks.length))
+    );
+    
+    // Combine chunk analyses
+    return combineChunkAnalyses(chunkAnalyses, file);
+}
+
+// Analyze a single chunk of a large file
+async function analyzeFileChunk(path: string, content: string, chunkIndex: number, totalChunks: number): Promise<any> {
+    const prompt = `
+Analyze this chunk (${chunkIndex + 1}/${totalChunks}) of file: ${path}
+
+Content:
+${content}
+
+Extract key information as JSON:
+{
+    "dependencies": ["dependencies found"],
+    "scripts": ["scripts/commands found"],
+    "entryPoints": ["entry points found"],
+    "features": ["features mentioned"],
+    "description": "brief description of this chunk"
+}
+`;
+
+    try {
+        const response = await client.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.1,
+        });
+
+        const result = response.choices[0]?.message?.content;
+        return result ? JSON.parse(cleanJsonResponse(result)) : null;
+    } catch (error) {
+        console.error(`Error analyzing chunk ${chunkIndex} of ${path}:`, error);
+        return null;
+    }
+}
+
+// Combine analyses from multiple chunks
+function combineChunkAnalyses(chunkAnalyses: any[], file: FileAnalysis): any {
+    const combined = {
+        fileType: file.type,
+        keyInfo: {
+            dependencies: [] as string[],
+            scripts: [] as string[],
+            entryPoints: [] as string[],
+            features: [] as string[],
+            description: ''
+        },
+        importance: file.importance
+    };
+
+    for (const analysis of chunkAnalyses) {
+        if (analysis?.keyInfo) {
+            combined.keyInfo.dependencies.push(...(analysis.keyInfo.dependencies || []));
+            combined.keyInfo.scripts.push(...(analysis.keyInfo.scripts || []));
+            combined.keyInfo.entryPoints.push(...(analysis.keyInfo.entryPoints || []));
+            combined.keyInfo.features.push(...(analysis.keyInfo.features || []));
+        }
+    }
+
+    // Remove duplicates
+    combined.keyInfo.dependencies = [...new Set(combined.keyInfo.dependencies)];
+    combined.keyInfo.scripts = [...new Set(combined.keyInfo.scripts)];
+    combined.keyInfo.entryPoints = [...new Set(combined.keyInfo.entryPoints)];
+    combined.keyInfo.features = [...new Set(combined.keyInfo.features)];
+
+    return combined;
+}
+
 // Analyze individual files to extract key information
 export async function analyzeFile(file: FileAnalysis): Promise<any> {
     const prompt = `
@@ -33,7 +305,7 @@ Analyze this file and extract key information:
 
 File: ${file.path}
 Content:
-${file.content.substring(0, 2000)}${file.content.length > 2000 ? '...' : ''}
+${file.content.substring(0, 3000)}${file.content.length > 3000 ? '...' : ''}
 
 Extract and return as JSON:
 {
@@ -57,7 +329,7 @@ Extract and return as JSON:
         });
 
         const result = response.choices[0]?.message?.content;
-        return result ? JSON.parse(result) : null;
+        return result ? JSON.parse(cleanJsonResponse(result)) : null;
     } catch (error) {
         console.error(`Error analyzing file ${file.path}:`, error);
         return null;
@@ -91,19 +363,31 @@ export async function analyzeRepository(
     fileTree: any[]
 ): Promise<AIAnalysisResult> {
     
-    // Prepare file analysis data
-    const filesForAnalysis = Object.entries(importantFiles).map(([path, content]) => ({
-        path,
-        content,
-        type: getFileType(path),
-        importance: getFileImportance(path)
-    }));
+    console.log(`🔍 Analyzing repository with ${Object.keys(importantFiles).length} files and ${fileTree.length} total files`);
+    
+    // Smart file prioritization for large codebases
+    const prioritizedFiles = prioritizeFiles(fileTree, importantFiles);
+    console.log(`📊 Prioritized ${prioritizedFiles.length} most important files`);
+    
+    // Parallel analysis of prioritized files
+    const fileAnalyses = await analyzeFilesParallel(prioritizedFiles);
+    console.log(`✅ Completed analysis of ${fileAnalyses.length} files`);
 
     // Detect language and project type from files
     const detectedLanguage = detectLanguageFromFiles(fileTree, importantFiles);
     const detectedProjectType = detectProjectTypeFromFiles(fileTree, importantFiles);
 
-    // Create comprehensive analysis prompt
+    // Create comprehensive analysis prompt with file summaries
+    const fileSummaries = fileAnalyses.map(analysis => {
+        if (!analysis) return '';
+        return `
+${analysis.fileType?.toUpperCase() || 'FILE'}: ${analysis.keyInfo?.description || 'No description'}
+- Dependencies: ${analysis.keyInfo?.dependencies?.join(', ') || 'None'}
+- Scripts: ${analysis.keyInfo?.scripts?.join(', ') || 'None'}
+- Features: ${analysis.keyInfo?.features?.join(', ') || 'None'}
+`;
+    }).join('\n');
+
     const prompt = `
 You are an expert software developer analyzing a GitHub repository to generate a comprehensive README.
 
@@ -112,19 +396,17 @@ Repository Information:
 - Description: ${repoInfo.description || 'No description provided'}
 - Language: ${repoInfo.language || detectedLanguage || 'Unknown'}
 - Total Files: ${fileTree.length}
+- Analyzed Files: ${fileAnalyses.length}
 
-Important Files Content:
-${filesForAnalysis.map(file => `
-=== ${file.path} ===
-${file.content.substring(0, 1000)}${file.content.length > 1000 ? '...' : ''}
-`).join('\n')}
+File Analysis Summary:
+${fileSummaries}
 
 Based on this analysis, provide a comprehensive README structure. Return ONLY valid JSON without any markdown formatting:
 
 {
     "projectType": "${detectedProjectType}",
     "mainLanguage": "${detectedLanguage}",
-    "dependencies": ["list of main dependencies based on the files"],
+    "dependencies": ["list of main dependencies based on the analysis"],
     "entryPoints": ["main entry files found in the repository"],
     "features": ["key features of the project based on code analysis"],
     "installationCommands": ["appropriate installation commands for ${detectedLanguage}"],
@@ -158,7 +440,6 @@ Important:
         }
     } catch (error) {
         console.error('Error analyzing repository:', error);
-        console.error('Raw AI response:', response?.choices[0]?.message?.content);
     }
 
     // Fallback result with better detection
