@@ -131,13 +131,13 @@ export default function ReadmeEditor({ initialContent, onContentChange, repoData
   };
 
   return (
-    <div className="h-full flex flex-col bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="h-full flex flex-col bg-slate-50">
       {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-white/80 backdrop-blur-sm shadow-sm">
+      <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-white shadow-sm">
         <div className="flex items-center space-x-6">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">📝</span>
+            <div className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">R</span>
             </div>
             <h2 className="text-xl font-bold text-slate-800">
               README Editor
@@ -183,8 +183,8 @@ export default function ReadmeEditor({ initialContent, onContentChange, repoData
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Section List */}
-        <div className="w-56 bg-white/70 backdrop-blur-sm border-r border-slate-200 flex flex-col shadow-lg">
-          <div className="p-6 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50">
+        <div className="w-56 bg-white border-r border-slate-200 flex flex-col shadow-lg">
+          <div className="p-6 border-b border-slate-200 bg-slate-50">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold text-slate-700">
                 Sections
@@ -209,8 +209,8 @@ export default function ReadmeEditor({ initialContent, onContentChange, repoData
                 key={section.id}
                 className={`p-4 mb-2 rounded-xl cursor-pointer transition-all duration-200 ${
                   activeSection === section.id 
-                    ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 shadow-md' 
-                    : 'bg-white/60 hover:bg-white/80 border border-slate-200 hover:border-slate-300 hover:shadow-md'
+                    ? 'bg-blue-50 border-2 border-blue-200 shadow-md' 
+                    : 'bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 hover:shadow-md'
                 }`}
                 onClick={() => setActiveSection(section.id)}
               >
@@ -260,7 +260,7 @@ export default function ReadmeEditor({ initialContent, onContentChange, repoData
           {viewMode === 'preview' && (
             <div className="w-full p-6 overflow-y-auto h-full">
               <div className="bg-white rounded-2xl shadow-xl border border-slate-200 min-h-full">
-                <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50">
+                <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-slate-50">
                   <h3 className="text-lg font-semibold text-slate-800">
                     Preview
                   </h3>
@@ -303,7 +303,7 @@ export default function ReadmeEditor({ initialContent, onContentChange, repoData
               </div>
               <div className="w-1/2 p-6 overflow-y-auto">
                 <div className="h-full bg-white rounded-2xl shadow-xl border border-slate-200">
-                  <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50">
+                  <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-slate-50">
                     <h3 className="text-lg font-semibold text-slate-800">
                       Preview
                     </h3>
@@ -420,9 +420,9 @@ function MarkdownSection({ section, updateSection }: { section: Section; updateS
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50">
+      <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-slate-50">
         <div className="flex items-center space-x-3">
-          <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+          <div className="w-6 h-6 bg-slate-700 rounded-lg flex items-center justify-center">
             <span className="text-white text-xs">M</span>
           </div>
           <input
@@ -476,9 +476,9 @@ function MarkdownSection({ section, updateSection }: { section: Section; updateS
 function CodeSection({ section, updateSection }: { section: Section; updateSection: (id: string, updates: Partial<Section>) => void }) {
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-purple-50">
+      <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-slate-50">
         <div className="flex items-center space-x-3">
-          <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
+          <div className="w-6 h-6 bg-slate-700 rounded-lg flex items-center justify-center">
             <span className="text-white text-xs">C</span>
           </div>
           <input

@@ -6,7 +6,7 @@ import { githubAPI } from '@/lib/github';
 import ReadmeEditor from '@/components/ReadmeEditor';
 
 interface Props {
-  params: { username: string; repo: string };
+  params: Promise<{ username: string; repo: string }>;
 }
 
 export default function RepoPage({ params }: Props) {

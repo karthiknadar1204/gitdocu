@@ -135,7 +135,7 @@ function prioritizeFiles(fileTree: any[], importantFiles: { [key: string]: strin
 
     // Get adaptive processing strategy
     const strategy = getProcessingStrategy(files.length, totalSize);
-    console.log(`📊 Processing strategy: ${JSON.stringify(strategy)}`);
+    console.log(`Processing strategy: ${JSON.stringify(strategy)}`);
 
     // Sort by importance and limit to top files
     return files
@@ -196,7 +196,7 @@ async function analyzeFileWithCaching(file: FileAnalysis, strategy: any): Promis
     // Check cache first
     const cacheKey = `${file.path}-${file.content.length}`;
     if (analysisCache.has(cacheKey)) {
-        console.log(`📋 Using cached analysis for ${file.path}`);
+        console.log(`Using cached analysis for ${file.path}`);
         return analysisCache.get(cacheKey);
     }
 
@@ -363,15 +363,15 @@ export async function analyzeRepository(
     fileTree: any[]
 ): Promise<AIAnalysisResult> {
     
-    console.log(`🔍 Analyzing repository with ${Object.keys(importantFiles).length} files and ${fileTree.length} total files`);
+    console.log(`Analyzing repository with ${Object.keys(importantFiles).length} files and ${fileTree.length} total files`);
     
     // Smart file prioritization for large codebases
     const prioritizedFiles = prioritizeFiles(fileTree, importantFiles);
-    console.log(`📊 Prioritized ${prioritizedFiles.length} most important files`);
+    console.log(`Prioritized ${prioritizedFiles.length} most important files`);
     
     // Parallel analysis of prioritized files
     const fileAnalyses = await analyzeFilesParallel(prioritizedFiles);
-    console.log(`✅ Completed analysis of ${fileAnalyses.length} files`);
+    console.log(`Completed analysis of ${fileAnalyses.length} files`);
 
     // Detect language and project type from files
     const detectedLanguage = detectLanguageFromFiles(fileTree, importantFiles);
