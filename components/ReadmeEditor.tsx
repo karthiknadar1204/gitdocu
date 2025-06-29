@@ -21,7 +21,6 @@ interface Section {
 export default function ReadmeEditor({ initialContent, onContentChange, repoData }: ReadmeEditorProps) {
   const [sections, setSections] = useState<Section[]>([]);
   const [activeSection, setActiveSection] = useState<string | null>(null);
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [viewMode, setViewMode] = useState<'split' | 'edit' | 'preview'>('split');
   const [isEditing, setIsEditing] = useState(false);
   const [showMarkdown, setShowMarkdown] = useState(false);
@@ -132,103 +131,114 @@ export default function ReadmeEditor({ initialContent, onContentChange, repoData
   };
 
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div className="h-full flex flex-col bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        <div className="flex items-center space-x-4">
-          <h2 className="text-lg font-semibold text-gray-900">README Editor</h2>
+      <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-white/80 backdrop-blur-sm shadow-sm">
+        <div className="flex items-center space-x-6">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">📝</span>
+            </div>
+            <h2 className="text-xl font-bold text-slate-800">
+              README Editor
+            </h2>
+          </div>
           
           {/* View Mode Toggle */}
-          <div className="flex bg-gray-100 rounded-lg p-1">
+          <div className="flex bg-slate-100 rounded-xl p-1 shadow-inner">
             <button
               onClick={() => setViewMode('edit')}
-              className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                viewMode === 'edit' ? 'bg-white shadow-sm' : 'text-gray-600'
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                viewMode === 'edit' 
+                  ? 'bg-white text-slate-800 shadow-sm ring-1 ring-slate-200' 
+                  : 'text-slate-600 hover:text-slate-800 hover:bg-white/50'
               }`}
             >
               Edit
             </button>
             <button
               onClick={() => setViewMode('split')}
-              className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                viewMode === 'split' ? 'bg-white shadow-sm' : 'text-gray-600'
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                viewMode === 'split' 
+                  ? 'bg-white text-slate-800 shadow-sm ring-1 ring-slate-200' 
+                  : 'text-slate-600 hover:text-slate-800 hover:bg-white/50'
               }`}
             >
               Split
             </button>
             <button
               onClick={() => setViewMode('preview')}
-              className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                viewMode === 'preview' ? 'bg-white shadow-sm' : 'text-gray-600'
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                viewMode === 'preview' 
+                  ? 'bg-white text-slate-800 shadow-sm ring-1 ring-slate-200' 
+                  : 'text-slate-600 hover:text-slate-800 hover:bg-white/50'
               }`}
             >
               Preview
             </button>
           </div>
         </div>
-
-        <div className="flex items-center space-x-2">
-          {/* Advanced Toggle */}
-          <button
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            className={`px-3 py-1 text-sm rounded-md transition-colors ${
-              showAdvanced ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
-            }`}
-          >
-            {showAdvanced ? 'Simple' : 'Advanced'}
-          </button>
-        </div>
       </div>
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Section List */}
-        <div className={`${showAdvanced ? 'w-64' : 'w-48'} bg-gray-50 border-r border-gray-200 flex flex-col`}>
-          <div className="p-4 border-b border-gray-200">
-            <h3 className="text-sm font-medium text-gray-900 mb-2">Sections</h3>
-            {showAdvanced && (
-              <div className="space-y-1">
-                <button
-                  onClick={() => addSection('markdown')}
-                  className="w-full px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  + Add Section
-                </button>
-              </div>
-            )}
+        <div className="w-56 bg-white/70 backdrop-blur-sm border-r border-slate-200 flex flex-col shadow-lg">
+          <div className="p-6 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-slate-700">
+                Sections
+              </h3>
+              <span className="text-xs text-slate-500 bg-white px-2 py-1 rounded-full">
+                {sections.length}
+              </span>
+            </div>
+            <div className="space-y-2">
+              <button
+                onClick={() => addSection('markdown')}
+                className="w-full px-3 py-2 text-sm bg-black text-white rounded-lg hover:bg-gray-800 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+              >
+                Add Section
+              </button>
+            </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto p-2">
             {sections.map((section, index) => (
               <div
                 key={section.id}
-                className={`p-3 border-b border-gray-200 cursor-pointer transition-colors ${
-                  activeSection === section.id ? 'bg-blue-50 border-blue-200' : 'hover:bg-gray-100'
+                className={`p-4 mb-2 rounded-xl cursor-pointer transition-all duration-200 ${
+                  activeSection === section.id 
+                    ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 shadow-md' 
+                    : 'bg-white/60 hover:bg-white/80 border border-slate-200 hover:border-slate-300 hover:shadow-md'
                 }`}
                 onClick={() => setActiveSection(section.id)}
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm font-medium text-gray-900 truncate">
-                      {section.title}
-                    </span>
-                    {section.type !== 'markdown' && (
-                      <span className="px-1 py-0.5 text-xs rounded bg-purple-100 text-purple-700">
-                        {section.type}
+                  <div className="flex items-center space-x-3 flex-1 min-w-0">
+                    <div className={`w-2 h-2 rounded-full ${
+                      section.type === 'markdown' ? 'bg-blue-500' : 'bg-purple-500'
+                    }`}></div>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm font-medium text-slate-800 truncate block">
+                        {section.title}
                       </span>
-                    )}
+                      <span className="text-xs text-slate-500">
+                        {section.type === 'markdown' ? 'Markdown' : 'Code'}
+                      </span>
+                    </div>
                   </div>
-                  {showAdvanced && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeSection(section.id);
-                      }}
-                      className="text-gray-400 hover:text-red-600"
-                    >
-                      ×
-                    </button>
-                  )}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeSection(section.id);
+                    }}
+                    className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
               </div>
             ))}
@@ -236,11 +246,11 @@ export default function ReadmeEditor({ initialContent, onContentChange, repoData
         </div>
 
         {/* Right Panel - Editor/Preview */}
-        <div className="flex-1 flex">
+        <div className="flex-1 flex bg-white/50 backdrop-blur-sm">
           {viewMode === 'edit' && (
-            <div className="w-full p-4">
+            <div className="w-full p-6">
               {activeSection && (
-                <div className="h-full">
+                <div className="h-full bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
                   {renderSection(sections.find(s => s.id === activeSection)!)}
                 </div>
               )}
@@ -248,64 +258,80 @@ export default function ReadmeEditor({ initialContent, onContentChange, repoData
           )}
 
           {viewMode === 'preview' && (
-            <div className="w-full p-4 overflow-y-auto">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Preview</h3>
-                <button
-                  onClick={() => setShowMarkdown(!showMarkdown)}
-                  className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                    showMarkdown ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
-                  }`}
-                >
-                  {showMarkdown ? 'Show Preview' : 'Show Markdown'}
-                </button>
-              </div>
-              
-              {showMarkdown ? (
-                <pre className="whitespace-pre-wrap text-sm text-gray-800 bg-gray-50 p-4 rounded-md overflow-x-auto border border-gray-200">
-                  {sections.map(section => section.content).join('\n\n')}
-                </pre>
-              ) : (
-                <div 
-                  className="prose prose-gray max-w-none"
-                  dangerouslySetInnerHTML={{ __html: renderMarkdown(sections.map(s => s.content).join('\n\n')) }}
-                />
-              )}
-            </div>
-          )}
-
-          {viewMode === 'split' && (
-            <>
-              <div className="w-1/2 p-4 border-r border-gray-200">
-                {activeSection && (
-                  <div className="h-full">
-                    {renderSection(sections.find(s => s.id === activeSection)!)}
-                  </div>
-                )}
-              </div>
-              <div className="w-1/2 p-4 overflow-y-auto">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Preview</h3>
+            <div className="w-full p-6 overflow-y-auto h-full">
+              <div className="bg-white rounded-2xl shadow-xl border border-slate-200 min-h-full">
+                <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50">
+                  <h3 className="text-lg font-semibold text-slate-800">
+                    Preview
+                  </h3>
                   <button
                     onClick={() => setShowMarkdown(!showMarkdown)}
-                    className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                      showMarkdown ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                      showMarkdown 
+                        ? 'bg-black text-white shadow-lg' 
+                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 hover:border-slate-300'
                     }`}
                   >
                     {showMarkdown ? 'Show Preview' : 'Show Markdown'}
                   </button>
                 </div>
                 
-                {showMarkdown ? (
-                  <pre className="whitespace-pre-wrap text-sm text-gray-800 bg-gray-50 p-4 rounded-md overflow-x-auto border border-gray-200">
-                    {sections.map(section => section.content).join('\n\n')}
-                  </pre>
-                ) : (
-                  <div 
-                    className="prose prose-gray max-w-none"
-                    dangerouslySetInnerHTML={{ __html: renderMarkdown(sections.map(s => s.content).join('\n\n')) }}
-                  />
+                <div className="p-6 overflow-y-auto max-h-[calc(100vh-300px)]">
+                  {showMarkdown ? (
+                    <pre className="whitespace-pre-wrap text-sm text-slate-800 bg-slate-50 p-6 rounded-xl overflow-x-auto border border-slate-200 font-mono">
+                      {sections.map(section => section.content).join('\n\n')}
+                    </pre>
+                  ) : (
+                    <div 
+                      className="prose prose-slate max-w-none prose-headings:text-slate-800 prose-p:text-slate-600 prose-a:text-blue-600 prose-code:bg-slate-100 prose-code:text-slate-800"
+                      dangerouslySetInnerHTML={{ __html: renderMarkdown(sections.map(s => s.content).join('\n\n')) }}
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {viewMode === 'split' && (
+            <>
+              <div className="w-1/2 p-6">
+                {activeSection && (
+                  <div className="h-full bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+                    {renderSection(sections.find(s => s.id === activeSection)!)}
+                  </div>
                 )}
+              </div>
+              <div className="w-1/2 p-6 overflow-y-auto">
+                <div className="h-full bg-white rounded-2xl shadow-xl border border-slate-200">
+                  <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50">
+                    <h3 className="text-lg font-semibold text-slate-800">
+                      Preview
+                    </h3>
+                    <button
+                      onClick={() => setShowMarkdown(!showMarkdown)}
+                      className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                        showMarkdown 
+                          ? 'bg-black text-white shadow-lg' 
+                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 hover:border-slate-300'
+                      }`}
+                    >
+                      {showMarkdown ? 'Show Preview' : 'Show Markdown'}
+                    </button>
+                  </div>
+                  
+                  <div className="p-6 overflow-y-auto max-h-[calc(100vh-200px)]">
+                    {showMarkdown ? (
+                      <pre className="whitespace-pre-wrap text-sm text-slate-800 bg-slate-50 p-6 rounded-xl overflow-x-auto border border-slate-200 font-mono">
+                        {sections.map(section => section.content).join('\n\n')}
+                      </pre>
+                    ) : (
+                      <div 
+                        className="prose prose-slate max-w-none prose-headings:text-slate-800 prose-p:text-slate-600 prose-a:text-blue-600 prose-code:bg-slate-100 prose-code:text-slate-800"
+                        dangerouslySetInnerHTML={{ __html: renderMarkdown(sections.map(s => s.content).join('\n\n')) }}
+                      />
+                    )}
+                  </div>
+                </div>
               </div>
             </>
           )}
@@ -394,16 +420,26 @@ function MarkdownSection({ section, updateSection }: { section: Section; updateS
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between mb-4">
-        <input
-          type="text"
-          value={section.title}
-          onChange={(e) => updateSection(section.id, { title: e.target.value })}
-          className="text-xl font-semibold text-gray-900 bg-transparent border-none outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
-        />
+      <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50">
+        <div className="flex items-center space-x-3">
+          <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+            <span className="text-white text-xs">M</span>
+          </div>
+          <input
+            type="text"
+            value={section.title}
+            onChange={(e) => updateSection(section.id, { title: e.target.value })}
+            className="text-xl font-bold bg-transparent border-none outline-none text-slate-800 placeholder-slate-400 focus:ring-0"
+            placeholder="Section Title"
+          />
+        </div>
         <button
           onClick={() => setIsEditing(!isEditing)}
-          className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+            isEditing 
+              ? 'bg-black text-white shadow-lg' 
+              : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 hover:border-slate-300'
+          }`}
         >
           {isEditing ? 'Preview' : 'Edit'}
         </button>
@@ -412,20 +448,24 @@ function MarkdownSection({ section, updateSection }: { section: Section; updateS
       <div className="flex-1">
         {isEditing ? (
           <div className="h-full flex flex-col">
-            <MarkdownToolbar onInsert={handleInsert} onFormat={handleFormat} />
+            <div className="border-b border-slate-200 bg-slate-50/50">
+              <MarkdownToolbar onInsert={handleInsert} onFormat={handleFormat} />
+            </div>
             <textarea
               ref={textareaRef}
               value={section.content}
               onChange={(e) => updateSection(section.id, { content: e.target.value })}
-              className="flex-1 w-full p-4 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-              placeholder="Write your markdown content here..."
+              className="flex-1 w-full p-6 border-none focus:ring-0 resize-none text-slate-700 placeholder-slate-400 font-mono text-sm leading-relaxed"
+              placeholder="Write your markdown content here... Use the toolbar above for quick formatting!"
             />
           </div>
         ) : (
-          <div 
-            className="prose prose-gray max-w-none h-full overflow-y-auto p-4 border border-gray-200 rounded-md"
-            dangerouslySetInnerHTML={{ __html: marked(section.content || '') }}
-          />
+          <div className="h-full overflow-y-auto p-6">
+            <div 
+              className="prose prose-slate max-w-none prose-headings:text-slate-800 prose-p:text-slate-600 prose-a:text-blue-600 prose-code:bg-slate-100 prose-code:text-slate-800 prose-pre:bg-slate-900 prose-pre:text-slate-100"
+              dangerouslySetInnerHTML={{ __html: marked(section.content || '') }}
+            />
+          </div>
         )}
       </div>
     </div>
@@ -436,24 +476,32 @@ function MarkdownSection({ section, updateSection }: { section: Section; updateS
 function CodeSection({ section, updateSection }: { section: Section; updateSection: (id: string, updates: Partial<Section>) => void }) {
   return (
     <div className="h-full flex flex-col">
-      <div className="mb-4">
-        <input
-          type="text"
-          value={section.title}
-          onChange={(e) => updateSection(section.id, { title: e.target.value })}
-          className="text-xl font-semibold text-gray-900 bg-transparent border-none outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
-        />
+      <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-purple-50">
+        <div className="flex items-center space-x-3">
+          <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
+            <span className="text-white text-xs">C</span>
+          </div>
+          <input
+            type="text"
+            value={section.title}
+            onChange={(e) => updateSection(section.id, { title: e.target.value })}
+            className="text-xl font-bold bg-transparent border-none outline-none text-slate-800 placeholder-slate-400 focus:ring-0"
+            placeholder="Code Section Title"
+          />
+        </div>
       </div>
 
-      <div className="flex-1 space-y-4">
+      <div className="flex-1 p-6 space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Language</label>
+          <label className="block text-sm font-semibold text-slate-700 mb-3">
+            Language
+          </label>
           <select
             value={section.config?.language || 'javascript'}
             onChange={(e) => updateSection(section.id, { 
               config: { ...section.config, language: e.target.value }
             })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white shadow-sm"
           >
             <option value="javascript">JavaScript</option>
             <option value="typescript">TypeScript</option>
@@ -466,14 +514,16 @@ function CodeSection({ section, updateSection }: { section: Section; updateSecti
           </select>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Code</label>
+        <div className="flex-1">
+          <label className="block text-sm font-semibold text-slate-700 mb-3">
+            Code
+          </label>
           <textarea
             value={section.content}
             onChange={(e) => updateSection(section.id, { content: e.target.value })}
-            placeholder="Paste your code here..."
+            placeholder="Paste your code here... It will be formatted with syntax highlighting in the preview."
             rows={15}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+            className="w-full px-4 py-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent font-mono text-sm bg-slate-50 resize-none"
           />
         </div>
       </div>
