@@ -25,6 +25,7 @@ export default function ReadmeEditor({ initialContent, onContentChange, repoData
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [viewMode, setViewMode] = useState<'split' | 'edit' | 'preview'>('split');
   const [isEditing, setIsEditing] = useState(false);
+  const [showMarkdown, setShowMarkdown] = useState(false);
 
   // Parse initial content into sections
   useEffect(() => {
@@ -259,10 +260,28 @@ export default function ReadmeEditor({ initialContent, onContentChange, repoData
 
           {viewMode === 'preview' && (
             <div className="w-full p-4 overflow-y-auto">
-              <div 
-                className="prose prose-gray max-w-none"
-                dangerouslySetInnerHTML={{ __html: renderMarkdown(sections.map(s => s.content).join('\n\n')) }}
-              />
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Preview</h3>
+                <button
+                  onClick={() => setShowMarkdown(!showMarkdown)}
+                  className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                    showMarkdown ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+                  }`}
+                >
+                  {showMarkdown ? 'Show Preview' : 'Show Markdown'}
+                </button>
+              </div>
+              
+              {showMarkdown ? (
+                <pre className="whitespace-pre-wrap text-sm text-gray-800 bg-gray-50 p-4 rounded-md overflow-x-auto border border-gray-200">
+                  {sections.map(section => section.content).join('\n\n')}
+                </pre>
+              ) : (
+                <div 
+                  className="prose prose-gray max-w-none"
+                  dangerouslySetInnerHTML={{ __html: renderMarkdown(sections.map(s => s.content).join('\n\n')) }}
+                />
+              )}
             </div>
           )}
 
@@ -276,10 +295,28 @@ export default function ReadmeEditor({ initialContent, onContentChange, repoData
                 )}
               </div>
               <div className="w-1/2 p-4 overflow-y-auto">
-                <div 
-                  className="prose prose-gray max-w-none"
-                  dangerouslySetInnerHTML={{ __html: renderMarkdown(sections.map(s => s.content).join('\n\n')) }}
-                />
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Preview</h3>
+                  <button
+                    onClick={() => setShowMarkdown(!showMarkdown)}
+                    className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                      showMarkdown ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+                    }`}
+                  >
+                    {showMarkdown ? 'Show Preview' : 'Show Markdown'}
+                  </button>
+                </div>
+                
+                {showMarkdown ? (
+                  <pre className="whitespace-pre-wrap text-sm text-gray-800 bg-gray-50 p-4 rounded-md overflow-x-auto border border-gray-200">
+                    {sections.map(section => section.content).join('\n\n')}
+                  </pre>
+                ) : (
+                  <div 
+                    className="prose prose-gray max-w-none"
+                    dangerouslySetInnerHTML={{ __html: renderMarkdown(sections.map(s => s.content).join('\n\n')) }}
+                  />
+                )}
               </div>
             </>
           )}
