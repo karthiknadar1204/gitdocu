@@ -194,8 +194,8 @@ export default function RepoPage({ params }: Props) {
         <ReadmeEditor 
           initialContent={aiGeneratedContent}
           onContentChange={setEditedContent}
-          repoData={repoData}
-        />
+            repoData={repoData}
+          />
       </div>
     </div>
   );

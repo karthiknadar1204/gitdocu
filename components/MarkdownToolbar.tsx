@@ -15,7 +15,6 @@ export default function MarkdownToolbar({ onInsert, onFormat }: MarkdownToolbarP
     { label: 'Italic', icon: 'I', action: 'italic', shortcut: 'Ctrl+I' },
     { label: 'Code', icon: '{}', action: 'code', shortcut: 'Ctrl+`' },
     { label: 'Link', icon: '🔗', action: 'link', shortcut: 'Ctrl+K' },
-    { label: 'Image', icon: '🖼️', action: 'image', shortcut: 'Ctrl+Shift+I' },
     { label: 'List', icon: '•', action: 'list', shortcut: 'Ctrl+L' },
     { label: 'Quote', icon: '💬', action: 'quote', shortcut: 'Ctrl+Q' },
   ];

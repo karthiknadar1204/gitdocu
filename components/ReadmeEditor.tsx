@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { marked } from 'marked';
 import MarkdownToolbar from './MarkdownToolbar';
-import DemoPreview from './DemoPreview';
 
 interface ReadmeEditorProps {
   initialContent: string;
@@ -15,7 +14,7 @@ interface Section {
   id: string;
   title: string;
   content: string;
-  type: 'markdown' | 'demo' | 'code';
+  type: 'markdown' | 'code';
   config?: any;
 }
 
@@ -88,7 +87,7 @@ export default function ReadmeEditor({ initialContent, onContentChange, repoData
     ));
   };
 
-  const addSection = (type: 'markdown' | 'demo' | 'code' = 'markdown') => {
+  const addSection = (type: 'markdown' | 'code' = 'markdown') => {
     const newSection: Section = {
       id: `section-${Date.now()}`,
       title: 'New Section',
@@ -125,8 +124,6 @@ export default function ReadmeEditor({ initialContent, onContentChange, repoData
 
   const renderSection = (section: Section) => {
     switch (section.type) {
-      case 'demo':
-        return <DemoSection section={section} updateSection={updateSection} />;
       case 'code':
         return <CodeSection section={section} updateSection={updateSection} />;
       default:
@@ -197,12 +194,6 @@ export default function ReadmeEditor({ initialContent, onContentChange, repoData
                 >
                   + Add Section
                 </button>
-                <button
-                  onClick={() => addSection('demo')}
-                  className="w-full px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700"
-                >
-                  + Add Demo
-                </button>
               </div>
             )}
           </div>
@@ -222,9 +213,7 @@ export default function ReadmeEditor({ initialContent, onContentChange, repoData
                       {section.title}
                     </span>
                     {section.type !== 'markdown' && (
-                      <span className={`px-1 py-0.5 text-xs rounded ${
-                        section.type === 'demo' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700'
-                      }`}>
+                      <span className="px-1 py-0.5 text-xs rounded bg-purple-100 text-purple-700">
                         {section.type}
                       </span>
                     )}
@@ -361,10 +350,6 @@ function MarkdownSection({ section, updateSection }: { section: Section; updateS
         formattedText = `[${selectedText}](url)`;
         newCursorPos = start + selectedText.length + 3;
         break;
-      case 'image':
-        formattedText = `![${selectedText}](image-url)`;
-        newCursorPos = start + selectedText.length + 10;
-        break;
       case 'list':
         formattedText = selectedText.split('\n').map(line => `- ${line}`).join('\n');
         newCursorPos = start + 2;
@@ -441,75 +426,6 @@ function MarkdownSection({ section, updateSection }: { section: Section; updateS
             className="prose prose-gray max-w-none h-full overflow-y-auto p-4 border border-gray-200 rounded-md"
             dangerouslySetInnerHTML={{ __html: marked(section.content || '') }}
           />
-        )}
-      </div>
-    </div>
-  );
-}
-
-// Demo Section Component
-function DemoSection({ section, updateSection }: { section: Section; updateSection: (id: string, updates: Partial<Section>) => void }) {
-  return (
-    <div className="h-full flex flex-col">
-      <div className="mb-4">
-        <input
-          type="text"
-          value={section.title}
-          onChange={(e) => updateSection(section.id, { title: e.target.value })}
-          className="text-xl font-semibold text-gray-900 bg-transparent border-none outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
-        />
-      </div>
-
-      <div className="flex-1 space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Demo Type</label>
-          <select
-            value={section.config?.type || 'codesandbox'}
-            onChange={(e) => updateSection(section.id, { 
-              config: { ...section.config, type: e.target.value }
-            })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="codesandbox">CodeSandbox</option>
-            <option value="stackblitz">StackBlitz</option>
-            <option value="live-demo">Live Demo</option>
-            <option value="video">Video Demo</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Demo URL</label>
-          <input
-            type="url"
-            value={section.config?.url || ''}
-            onChange={(e) => updateSection(section.id, { 
-              config: { ...section.config, url: e.target.value }
-            })}
-            placeholder="https://..."
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-          <textarea
-            value={section.content}
-            onChange={(e) => updateSection(section.id, { content: e.target.value })}
-            placeholder="Describe what this demo shows..."
-            rows={4}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-
-        {section.config?.url && (
-          <div className="border border-gray-200 rounded-md p-4">
-            <h4 className="text-sm font-medium text-gray-700 mb-2">Preview</h4>
-            <DemoPreview 
-              type={section.config.type || 'codesandbox'}
-              url={section.config.url}
-              title={section.title}
-            />
-          </div>
         )}
       </div>
     </div>

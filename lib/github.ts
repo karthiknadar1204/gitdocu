@@ -125,8 +125,8 @@ class GitHubAPI {
 
     const response = await fetch(url, {
       ...options,
-      headers: {
-        'Accept': 'application/vnd.github.v3+json',
+        headers: {
+          'Accept': 'application/vnd.github.v3+json',
         'User-Agent': 'GitDoc-App/1.0 (https://github.com/your-repo)',
         'X-GitHub-Api-Version': '2022-11-28',
         ...options.headers,
@@ -171,8 +171,8 @@ class GitHubAPI {
   async getRepositoryTree(username: string, repo: string, branch: string = 'main'): Promise<any> {
     const url = `https://api.github.com/repos/${username}/${repo}/git/trees/${branch}?recursive=1`;
     const response = await this.makeRequest(url);
-    
-    if (!response.ok) {
+
+      if (!response.ok) {
       if (response.status === 403) {
         throw new Error('GitHub API rate limit exceeded. Please try again in a few minutes.');
       } else if (response.status === 404) {
@@ -193,9 +193,9 @@ class GitHubAPI {
       } else {
         throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
       }
-    }
-    
-    return response.json();
+      }
+
+      return response.json();
   }
 
   async getFileContent(username: string, repo: string, path: string): Promise<string | null> {
@@ -234,7 +234,7 @@ class GitHubAPI {
           files[path] = content;
           console.log(`✅ Fetched: ${path} (${content.length} chars)`);
         }
-      } catch (error) {
+  } catch (error) {
         if (error instanceof Error && error.message.includes('Rate limit')) {
           console.warn('Rate limit hit, stopping file fetch');
           rateLimitHit = true;
