@@ -9,6 +9,9 @@ interface MarkdownToolbarProps {
 
 export default function MarkdownToolbar({ onInsert, onFormat }: MarkdownToolbarProps) {
   const [showMore, setShowMore] = useState(false);
+  const [showTableBuilder, setShowTableBuilder] = useState(false);
+  const [tableRows, setTableRows] = useState(3);
+  const [tableCols, setTableCols] = useState(3);
 
   const formatOptions = [
     { 
@@ -75,7 +78,6 @@ export default function MarkdownToolbar({ onInsert, onFormat }: MarkdownToolbarP
 
   const insertOptions = [
     { label: 'Badge', text: '![Badge](https://img.shields.io/badge/status-active-green)' },
-    { label: 'Table', text: '| Header 1 | Header 2 |\n|----------|----------|\n| Cell 1   | Cell 2   |' },
     { label: 'Code Block', text: '```\n// Your code here\n```' },
     { label: 'Horizontal Rule', text: '---' },
     { label: 'Checkbox', text: '- [ ] Task item' },
@@ -87,6 +89,27 @@ export default function MarkdownToolbar({ onInsert, onFormat }: MarkdownToolbarP
 
   const handleInsert = (text: string) => {
     onInsert(text);
+  };
+
+  const generateTable = () => {
+    const headers = Array.from({ length: tableCols }, (_, i) => `Header ${i + 1}`);
+    const separator = Array.from({ length: tableCols }, () => '---').join(' | ');
+    
+    let table = `| ${headers.join(' | ')} |\n`;
+    table += `| ${separator} |\n`;
+    
+    for (let i = 0; i < tableRows; i++) {
+      const row = Array.from({ length: tableCols }, (_, j) => `Cell ${i + 1}-${j + 1}`).join(' | ');
+      table += `| ${row} |\n`;
+    }
+    
+    return table;
+  };
+
+  const handleTableInsert = () => {
+    const table = generateTable();
+    onInsert(table);
+    setShowTableBuilder(false);
   };
 
   return (
@@ -151,8 +174,59 @@ export default function MarkdownToolbar({ onInsert, onFormat }: MarkdownToolbarP
                   {option.label}
                 </button>
               ))}
+              <button
+                onClick={() => setShowTableBuilder(!showTableBuilder)}
+                className="px-3 py-2 text-xs font-medium bg-white text-slate-700 rounded-md hover:bg-slate-50 transition-all duration-150 border border-slate-200 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+              >
+                Table
+              </button>
             </div>
           </div>
+
+          {/* Table Builder */}
+          {showTableBuilder && (
+            <div className="bg-white border border-slate-200 rounded-md p-4 space-y-3">
+              <h5 className="text-sm font-medium text-slate-800">Table Builder</h5>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Rows</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={tableRows}
+                    onChange={(e) => setTableRows(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))}
+                    className="w-full px-2 py-1 text-sm border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Columns</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={tableCols}
+                    onChange={(e) => setTableCols(Math.max(1, Math.min(10, parseInt(e.target.value) || 1)))}
+                    className="w-full px-2 py-1 text-sm border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                  />
+                </div>
+              </div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={handleTableInsert}
+                  className="px-3 py-1 text-xs font-medium bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
+                >
+                  Insert Table
+                </button>
+                <button
+                  onClick={() => setShowTableBuilder(false)}
+                  className="px-3 py-1 text-xs font-medium bg-white text-slate-600 border border-slate-200 rounded-md hover:bg-slate-50 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
